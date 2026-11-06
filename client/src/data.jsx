@@ -1,5 +1,4 @@
-// SSR로 내려온 첫 데이터를 화면과 공유한다.
-// 첫 화면은 서버가 준 데이터를 그대로 쓰고(다시 부르지 않음), 다른 페이지로 이동하면 /api에서 가져온다.
+// React 화면에서 같은 출처의 서버 API를 조회한다. 병무청 인증키는 전달받지 않는다.
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 

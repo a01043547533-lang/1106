@@ -1,11 +1,12 @@
 // Express API. 화면은 병무청 API를 직접 부르지 않고 여기 /api/* 만 읽는다.
 import express from 'express';
-import crypto from 'node:crypto';
+
 import * as repo from './repo/index.js';
 import * as q from './queries.js';
-import { TRUST_PROXY } from './config.js';
+import { TRUST_PROXY, SERVERLESS } from './config.js';
+import { refreshStatus } from './live.js';
 import { requestLimit } from './rate-limit.js';
-import { sendVerification } from './mailer.js';
+
 
 export const app = express();
 app.disable('x-powered-by');
@@ -13,6 +14,12 @@ app.set('trust proxy', TRUST_PROXY);
 app.use('/api', (req, res, next) => { res.set({ 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff' }); next(); });
 app.use('/api', requestLimit());
 app.use(express.json({ limit: '50kb' }));
+app.use('/api', async (req, res, next) => {
+  if (!SERVERLESS) return next();
+  if (['/subscribe', '/verify', '/unsubscribe'].includes(req.path)) return res.status(503).json({ error: '과제 배포에서는 이메일 알림을 제공하지 않습니다. 일정 화면을 확인해 주세요.' });
+  if (['/now', '/stats', '/calendar', '/rounds', '/plan', '/health', '/mos', '/mos/search'].includes(req.path) || req.path.startsWith('/mos/')) await refreshStatus();
+  next();
+});
 const startedAt = Date.now();
 
 // 모든 응답에 { source, collectedAt }를 넣는다.
@@ -196,60 +203,6 @@ app.get('/api/health', (req, res) => {
 });
 app.get('/api/public-config', (req, res) => res.json(q.publicConfig()));
 
-// ── 구독 ─────────────────────────────
-const KINDS = new Set(['start', 'deadline', 'shortage', 'katusa', 'social', 'ads']);
-app.post('/api/subscribe', requestLimit({ limit: 5 }), async (req, res, next) => {
-  try {
-  const contact = String(req.body?.contact || '').trim().toLowerCase();
-  const mosCode = req.body?.mosCode ? String(req.body.mosCode) : null;
-  const kinds = (Array.isArray(req.body?.kinds) ? req.body.kinds : []).filter((k) => KINDS.has(k));
-  if (contact.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(contact)) return res.status(400).json({ error: '이메일 형식을 확인해 주세요' });
-  if (mosCode && (mosCode.length > 80 || !q.mosDetail(mosCode))) return res.status(400).json({ error: '특기를 확인해 주세요' });
-  if (!kinds.length && !mosCode) return res.status(400).json({ error: '알림 종류를 하나 이상 골라 주세요' });
-
-  const subscription = repo.updateSubscriptions((subs) => {
-    let found = subs.find((s) => s.contact === contact && s.mosCode === mosCode);
-    const now = Date.now();
-    if (found?.verificationSentAt && now - Date.parse(found.verificationSentAt) < 60000) return null;
-    if (!found) {
-      found = { id: crypto.randomUUID(), contact, mosCode, kinds: [], createdAt: new Date(now).toISOString(), verifiedAt: null, unsubToken: crypto.randomBytes(32).toString('hex') };
-      subs.push(found);
-    }
-    // 이메일 소유자의 확인 없이 기존 관심 종류를 늘리지 않는다.
-    found.pendingKinds = [...new Set([...found.kinds, ...kinds, ...(!kinds.length && mosCode ? ['start', 'deadline', 'shortage'] : [])])];
-    found.verifyToken = crypto.randomBytes(32).toString('hex');
-    found.verifyExpiresAt = new Date(now + 48 * 3600000).toISOString();
-    found.verificationSentAt = new Date(now).toISOString();
-    return { ...found };
-  });
-  if (subscription) await sendVerification(subscription);
-  res.status(202).json({ ok: true, verificationRequired: true, message: '확인 메일의 링크를 눌러야 알림이 시작돼요.' });
-  } catch (error) { next(error); }
-});
-
-app.get('/api/verify', (req, res) => {
-  const token = String(req.query.token || '');
-  if (!/^[a-f0-9]{64}$/.test(token)) return res.status(400).type('html').send('<!doctype html><meta charset="utf-8"><p>확인 링크가 올바르지 않아요.</p>');
-  const verified = repo.updateSubscriptions((subs) => {
-    const sub = subs.find((s) => s.verifyToken === token);
-    if (!sub || !Number.isFinite(Date.parse(sub.verifyExpiresAt)) || Date.parse(sub.verifyExpiresAt) <= Date.now()) return false;
-    sub.verifiedAt = new Date().toISOString();
-    sub.kinds = sub.pendingKinds || sub.kinds;
-    delete sub.pendingKinds; delete sub.verifyToken; delete sub.verifyExpiresAt;
-    return true;
-  });
-  res.status(verified ? 200 : 410).type('html').send(`<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="referrer" content="no-referrer"><title>이메일 확인 · 입대타이밍</title><p>${verified ? '이메일 확인이 완료됐어요. 이제 신청한 알림을 보내 드려요.' : '만료되었거나 이미 사용한 링크예요. 필요하면 다시 신청해 주세요.'}</p><a href="/alerts">알림 안내</a></html>`);
-});
-
-app.get('/api/unsubscribe', (req, res) => {
-  const token = String(req.query.token || '');
-  if (token) repo.updateSubscriptions((subs) => {
-    const index = subs.findIndex((s) => s.unsubToken === token);
-    if (index >= 0) subs.splice(index, 1);
-  });
-  res.type('html').send('<!doctype html><meta charset="utf-8"><p>해지됐어요.</p>');
-});
-
 app.use('/api', (req, res) => res.status(404).json({ error: '없는 API예요' }));
 
 // 쿼리, 요청 본문, 오류 메시지를 찍지 않는다. Express 기본 오류 출력으로 입력값이 새지 않게 한다.
@@ -259,9 +212,3 @@ app.use('/api', (error, req, res, next) => {
   console.error(`[api] ${req.method} ${req.path} HTTP ${status}`);
   res.status(status).json({ error: status === 400 ? '요청 형식을 확인해 주세요.' : '지금은 처리할 수 없어요. 잠시 뒤 다시 시도해 주세요.' });
 });
-
-// 숫자만 뽑는 도우미 ("165~195cm / 50~100kg" → [165,195,50,100])
-function numbers(v) {
-  if (v === null || v === undefined) return [];
-  return (String(v).match(/\d+(\.\d+)?/g) || []).map(Number);
-}

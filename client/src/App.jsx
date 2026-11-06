@@ -1,4 +1,4 @@
-// 화면 라우트. SSR로 첫 화면 본문이 HTML에 그대로 들어가 검색 엔진이 읽을 수 있다.
+// React 화면 라우트. Vercel의 SPA rewrite로 직접 접속과 새로고침을 지원한다.
 import { Routes, Route, NavLink, Link, useLocation } from 'react-router-dom';
 import { useMeta } from './data.jsx';
 import { formatKst, useApi } from './components.jsx';
@@ -30,6 +30,8 @@ export default function App() {
     <div className={`wrap${pathname === '/' ? ' home-wrap' : ''}`}>
       {(sample || current.consecutiveFailures >= 3) && <div className="sample-badge" role="status">{sample ? '샘플 데이터예요. 실제 접수현황과 다를 수 있어요.' : '접수현황 수집이 연속 3회 이상 실패했어요.'} <Link to="/status">운영 상태 확인</Link></div>}
       {current.stale && <div className="sample-badge" role="status">데이터가 오래됐어요 · 마지막 성공 수집이 6시간 이상 지났거나 수집 이력이 없어요. <Link to="/status">수집 상태 확인</Link></div>}
+      {current.apiConfigured === false && <div className="sample-badge" role="status">실시간 API 연결을 준비 중이에요. 현재는 저장된 공개 자료를 표시합니다.</div>}
+      {current.apiConfigured && current.connectionFailed && <div className="sample-badge" role="status">병무청 실시간 조회가 실패해 저장된 공개 자료를 표시합니다. <Link to="/status">연결 상태 확인</Link></div>}
       <header>
         <NavLink to="/" className="logo"><img src="/favicon.svg" width="30" height="30" alt="" />입대타이밍<span className="logo-dot" aria-hidden="true">.</span></NavLink>
         <nav aria-label="메뉴">{MENU.map(([to, label]) => <NavLink key={to} to={to}>{label}</NavLink>)}</nav>

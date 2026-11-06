@@ -6,19 +6,17 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const SERVER_DIR = __dirname;
 export const ROOT_DIR = path.resolve(__dirname, '..');
-loadEnv(path.join(SERVER_DIR, '.env'));
-loadEnv(path.join(ROOT_DIR, '.env'));
+if (process.env.VERCEL !== '1') {
+  loadEnv(path.join(SERVER_DIR, '.env'));
+  loadEnv(path.join(ROOT_DIR, '.env'));
+}
+export const SERVERLESS = true;
 export const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(__dirname, 'data');
 
 export const PORT = Number(process.env.PORT || 3000);
 export const API_KEY = process.env.MMA_API_KEY || '';
 // 기본은 직접 연결. 프록시 사용 시 운영자가 신뢰할 IP/CIDR을 명시한다.
 export const TRUST_PROXY = process.env.TRUST_PROXY ? process.env.TRUST_PROXY.split(',').map((v) => v.trim()) : false;
-export const MAIL = {
-  provider: process.env.MAIL_PROVIDER || 'Resend',
-  key: process.env.MAIL_KEY || '',
-  from: process.env.MAIL_FROM || '',
-};
 
 // 검색 최적화 설정 — 도메인을 연결하면 SITE_URL을 꼭 바꾼다(canonical·sitemap에 쓰임).
 export const SITE = {
@@ -29,7 +27,7 @@ export const SITE = {
   contactEmail: process.env.CONTACT_EMAIL || '',
 };
 
-// 수집기에서 쓰는 API 8개. url이 비어 있으면 sample로 대체한다.
+// 병무청 API 경로. 접수현황은 서버에서 실시간 조회한다.
 const B = 'https://apis.data.go.kr/1300000';
 // 요청주소 = 공공데이터포털 "서비스 URL" + 상세기능 경로. .env 값이 있으면 그걸 쓰고, 없으면 아래 기본값.
 export const APIS = {

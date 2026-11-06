@@ -145,37 +145,8 @@ export function MultiPicker({ value, onChange, placeholder = '자격증·면허�
 }
 
 // 알림 신청 폼
-export function SubscribeForm({ mosCode = null, kinds = ['start', 'deadline', 'shortage'], label = '알림 받기' }) {
-  const [contact, setContact] = useState('');
-  const [state, setState] = useState({ ok: false, error: null, busy: false });
-  const [highlight, setHighlight] = useState(false);
-  useEffect(() => {
-    if (!state.ok) return undefined;
-    setHighlight(true);
-    const timer = setTimeout(() => setHighlight(false), 1500);
-    return () => clearTimeout(timer);
-  }, [state.ok]);
-  const submit = async (e) => {
-    e.preventDefault();
-    setState({ ok: false, error: null, busy: true });
-    try {
-      const r = await fetch('/api/subscribe', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ contact, mosCode, kinds }) });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error || '신청하지 못했어요');
-      setState({ ok: true, error: null, busy: false });
-    } catch (err) {
-      setState({ ok: false, error: err.message, busy: false });
-    }
-  };
-  if (state.ok) return <div role="status"><p className={`done ${highlight ? 'subscribe-success' : ''}`}>신청했어요 ✓</p><p>확인 메일의 링크를 눌러야 알림이 시작돼요. <Link to="/privacy">개인정보처리방침</Link></p></div>;
-  return (
-    <form className="subscribe" onSubmit={submit}>
-      <input type="email" required value={contact} onChange={(e) => setContact(e.target.value)} placeholder="이메일 주소" aria-label="이메일 주소" />
-      <button type="submit" disabled={state.busy}>{label}</button>
-      {state.error && <p className="error">{state.error}</p>}
-      <p className="muted small">보내는 것은 일정 알림만이고, 언제든 해지할 수 있어요. <Link to="/privacy">개인정보처리방침</Link></p>
-    </form>
-  );
+export function SubscribeForm() {
+  return <div className="subscription-unavailable"><p>과제 배포에서는 이메일 알림을 제공하지 않아요. 이메일 주소는 수집하지 않습니다.</p><Link to="/calendar">모집 일정 확인하기 →</Link><p className="muted small"><Link to="/privacy">개인정보처리방침</Link></p></div>;
 }
 
 export function dday(date) {

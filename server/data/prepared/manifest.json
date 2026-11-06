@@ -1,0 +1,44 @@
+[
+  {
+    "key": "mos",
+    "fetchedAt": "2026-11-06T03:50:13.965Z",
+    "rows": 316,
+    "bytes": 5881
+  },
+  {
+    "key": "docs",
+    "fetchedAt": "2026-11-06T03:50:27.967Z",
+    "rows": 3466,
+    "bytes": 27718
+  },
+  {
+    "key": "score",
+    "fetchedAt": "2026-11-06T05:09:39.548Z",
+    "rows": 11556,
+    "bytes": 71099
+  },
+  {
+    "key": "scoreSp",
+    "fetchedAt": "2026-11-06T03:50:34.104Z",
+    "rows": 10075,
+    "bytes": 73852
+  },
+  {
+    "key": "eligible",
+    "fetchedAt": "2026-11-06T03:50:49.398Z",
+    "rows": 1272726,
+    "bytes": 12619501
+  },
+  {
+    "key": "jobfit",
+    "fetchedAt": "2026-11-06T04:41:41.443Z",
+    "rows": 125,
+    "bytes": 1621
+  },
+  {
+    "key": "social",
+    "fetchedAt": "2026-11-06T04:41:44.151Z",
+    "rows": 22108,
+    "bytes": 1089125
+  }
+]

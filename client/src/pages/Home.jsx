@@ -111,7 +111,7 @@ export default function Home() {
       <aside className="official-strip"><div><b>마음에 드는 특기를 찾았나요?</b><p>본인인증과 최종 지원은 병무청 누리집에서 진행해요.</p></div><OfficialApplyLink>병무청 지원하기 ↗</OfficialApplyLink></aside>
 
       {stats.value && (
-        <p className="muted">특기 <CountNumber value={stats.value.specialtiesTracked} animate={countStats} />개 추적 · 스냅샷 <CountNumber value={stats.value.snapshotsCount} animate={countStats} />건 · 알림 <CountNumber value={stats.value.subscribersCount} animate={countStats} />명</p>
+        <p className="muted">조회한 특기 <CountNumber value={stats.value.specialtiesTracked} animate={countStats} />개 · 접수현황 <CountNumber value={stats.value.snapshotsCount} animate={countStats} />건</p>
       )}
       <AdSlot size="320x100" />
       </div>

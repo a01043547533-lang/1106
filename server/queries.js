@@ -1,7 +1,7 @@
 // API 핸들러와 SSR 로더가 함께 쓰는 조회 함수.
 // 같은 함수를 쓰기 때문에 화면 본문 숫자와 /api 응답 숫자가 갈리지 않는다.
 import * as repo from './repo/index.js';
-import { MAIL, SITE } from './config.js';
+import { SITE } from './config.js';
 import { koreaDay, scheduleTime } from './time.js';
 
 export const today = koreaDay;
@@ -12,7 +12,7 @@ export function meta() {
   const { lastCollectedAt, isSample, consecutiveFailures, stale } = repo.collectStatus();
   return { source: isSample ? 'sample' : 'api', collectedAt: lastCollectedAt, consecutiveFailures, stale, publicConfig: publicConfig() };
 }
-export const publicConfig = () => ({ mailProvider: MAIL.provider, mailMode: MAIL.key ? 'live' : 'console', contactEmail: SITE.contactEmail, privacyUpdatedAt: '2026-11-06' });
+export const publicConfig = () => ({ mailMode: 'disabled', subscriptionsEnabled: false, deploymentMode: 'serverless', contactEmail: SITE.contactEmail, privacyUpdatedAt: '2026-11-06' });
 
 export function nowList({ branch, category, unit, sort = 'rate_asc' } = {}) {
   const now = Date.now();
@@ -89,7 +89,7 @@ export function stats() {
   return {
     specialtiesTracked: new Set(snaps.map((s) => `${s.branch}|${s.mosCode}`)).size,
     snapshotsCount: snaps.length,
-    subscribersCount: repo.getSubscriptions().filter((s) => s.verifiedAt).length,
+    subscribersCount: 0,
     firstCollectedAt: snaps[0]?.collectedAt || null,
     rulesFetchedAt: repo.getDataset('score').fetchedAt,
   };

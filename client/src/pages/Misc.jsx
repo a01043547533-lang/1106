@@ -1,7 +1,7 @@
 // 입대 준비 · 사회복무 · 알림 · 광고 안내 · 개인정보처리방침 · 이용약관
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useMeta } from '../data.jsx';
+
 import { AdSlot, RulesBox, Status, SubscribeForm, addMonths, monthLabel, useApi } from '../components.jsx';
 
 function DischargeCalc() {
@@ -107,7 +107,7 @@ export function Alerts() {
   return (
     <>
       <h1>모집병 접수 알림 받기</h1>
-      <p className="lead">접수는 1주일 남짓으로 짧고, 미달 특기는 마감 직전에 드러나요. 놓치지 않게 이메일로 알려 드려요.</p>
+      <p className="lead">과제 버전에서는 이메일 발송 없이 모집 일정을 조회할 수 있어요. 관심 있는 특기의 접수기간을 확인해 주세요.</p>
       <section className="card">
         <h2>관심 특기 알림</h2>
         <p className="muted small">특기 상세 페이지에서 "이 특기 알림 받기"로 신청할 수 있어요. <Link to="/mos">특기 목록</Link></p>
@@ -117,7 +117,7 @@ export function Alerts() {
         <section className="card"><h2>사회복무 소집신청</h2><SubscribeForm kinds={['social']} label="신청" /></section>
         <section className="card"><h2>모집병 접수 시작</h2><SubscribeForm kinds={['start']} label="신청" /></section>
       </div>
-      <p className="muted small">확인 메일의 링크를 누른 뒤 알림을 보내 드려요. <Link to="/privacy">개인정보처리방침</Link></p>
+      <p className="muted small">이메일 주소를 수집하거나 발송하지 않습니다. <Link to="/privacy">개인정보처리방침</Link></p>
     </>
   );
 }
@@ -143,29 +143,7 @@ export function Ads() {
 }
 
 export function Privacy() {
-  const meta = useMeta();
-  const live = useApi('/api/public-config');
-  const config = live.data || meta.publicConfig || {};
-  return (
-    <>
-      <h1>개인정보처리방침</h1>
-      <section className="card">
-        <ul>
-          <li>수집 항목: 이메일 주소, 관심 특기·알림 종류, 신청·확인 시각, 확인·해지용 토큰을 저장해요.</li>
-          <li>목적: 신청한 일정 알림을 보내기 위해서예요.</li>
-          <li>보유 기간: 구독 정보는 해지할 때까지 보관하고 해지하면 삭제해요. 확인하지 않은 신청은 7일 뒤 다음 알림 작업에서 삭제해요.</li>
-          <li>발송 중복 방지값(이메일·일정을 조합한 해시), 알림 종류와 발송 시각은 중복 발송 방지를 위해 90일 보관해요. 메일 본문·이메일 원문은 발송 이력 파일에 저장하지 않아요.</li>
-          <li>메일 발송 수탁 업체: <b>{config.mailProvider || '설정 확인 중'}</b>. 이메일 주소와 신청한 알림 내용을 전달해 발송을 맡겨요.{config.mailMode === 'console' && ' 현재 발송 키가 없어 외부 발송 없이 개발 콘솔에 보낼 내용을 출력하는 점검 모드예요.'}</li>
-          <li>신장·체중·시력·신체등급·자격 검색 입력은 조회에만 쓰고 저장하지 않아요. /api/mos/search와 /api/eligible의 쿼리 문자열을 애플리케이션 로그에 남기지 않아요.</li>
-          <li>요청 제한을 위해 IP와 요청 시각을 서버 메모리에 최대 약 2분 보관해요. 디스크에는 저장하지 않아요.</li>
-          <li>모든 메일 아래 해지 링크로 구독을 취소할 수 있어요. 열람·정정·삭제 문의도 아래 연락처로 받습니다.</li>
-          <li>광고를 붙이면 광고 서비스가 쿠키를 쓸 수 있어요. 브라우저 설정에서 거부할 수 있어요.</li>
-        </ul>
-        <p>개인정보 문의: {config.contactEmail ? <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a> : '운영자 문의 이메일이 아직 설정되지 않았어요.'}</p>
-        <p className="muted small">최신 갱신일: {config.privacyUpdatedAt || '2026-11-06'}</p>
-      </section>
-    </>
-  );
+  return <><h1>개인정보처리방침</h1><section className="card"><p>이 과제용 웹앱은 회원가입과 이메일 알림 신청을 받지 않으며 이메일 주소를 수집하지 않습니다.</p><p>입력한 신체조건·자격은 특기 조회에만 사용합니다. 서버 함수는 검색 입력을 파일에 저장하거나 애플리케이션 로그에 남기지 않습니다. 호스팅 서비스의 요청 로그 정책은 별도로 적용됩니다.</p><p>병무청 인증키는 서버 환경변수에서만 사용하며 React 화면으로 전달하지 않습니다. API 호출 결과 중 공개 모집 정보만 반환합니다.</p><p>IP별 요청 횟수는 서버 함수 메모리에서 일시적으로 집계하며 함수 재시작 시 초기화됩니다. 가상 광고에는 외부 광고 스크립트나 추적 쿠키가 없습니다.</p><p className="muted small">갱신일: 2026-11-06</p></section></>;
 }
 
 export function Terms() {
