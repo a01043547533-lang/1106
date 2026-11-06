@@ -1,0 +1,34 @@
+{
+  "name": "ipdae-timing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "입대타이밍 — 병무청 공공데이터 기반 입대 정보 사이트",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "collect": "node server/collector.js",
+    "collect:daily": "node server/collector.js --daily",
+    "dev": "node server/index.js",
+    "build": "vite build --config client/vite.config.js && vite build --config client/vite.config.js --ssr src/entry-server.jsx --outDir ../dist/server",
+    "start": "node server/index.js --prod",
+    "collect:eligible": "node server/collector.js --daily --force",
+    "notify": "node server/notifier.js",
+    "backup": "node server/backup.js",
+    "test:ops": "node --test tests/operations.test.mjs",
+    "audit:descriptions": "node scripts/audit-descriptions.mjs",
+    "import:service-terms": "node server/repo/import-service-terms.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "fast-xml-parser": "^4.5.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.11"
+  }
+}

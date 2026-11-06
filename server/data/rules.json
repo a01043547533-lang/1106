@@ -1,0 +1,65 @@
+[
+  {
+    "id": 1,
+    "text": "같은 모집회차의 육군 기술행정병, 해군 또는 해병대 일반/전문기술병, 공군 전문기술병은 서로 중복접수할 수 있어요. 해군과 해병대는 같은 군으로 봐서 서로는 안 돼요.",
+    "sourceUrl": "https://www.mma.go.kr/contents.do?mc=mma0003710",
+    "verified": true
+  },
+  {
+    "id": 2,
+    "text": "각 군 전문특기병, 동반입대병, 연고지복무병, 직계가족복무부대병에 지원하면 다른 모집분야에는 중복접수할 수 없어요. 육군 전문특기병은 카투사도 포함이에요.",
+    "sourceUrl": "https://www.mma.go.kr/contents.do?mc=mma0003710",
+    "verified": true
+  },
+  {
+    "id": 3,
+    "text": "일반병 입영일이 정해진 사람은 그 입영일 30일 전까지만 모집병에 지원할 수 있어요.",
+    "sourceUrl": "https://www.mma.go.kr/contents.do?mc=mma0003710",
+    "verified": true
+  },
+  {
+    "id": 4,
+    "text": "공군 일반기술병과 같은 회차의 전문기술·전문특기병에 1차 합격하면 공군 일반기술병에는 중복지원할 수 없어요.",
+    "sourceUrl": "https://www.mma.go.kr/contents.do?mc=mma0003710",
+    "verified": true
+  },
+  {
+    "id": 5,
+    "text": "출결상황 점수는 2025년 12월 30일 접수(26-1회차)부터 전 군에서 폐지됐어요. 육군 전문특기병은 12월 31일 접수부터예요.",
+    "sourceUrl": "https://www.mma.go.kr/contents.do?mc=mma0003722",
+    "verified": true,
+    "effectiveFrom": "2025-12-30"
+  },
+  {
+    "id": 6,
+    "text": "면접평가도 같은 날로 전 군에서 폐지됐어요. 단 임무 특수성 때문에 전문특기병 9개 특기는 면접을 그대로 봐요.",
+    "sourceUrl": "https://www.mma.go.kr/contents.do?mc=mma0003722",
+    "verified": true,
+    "effectiveFrom": "2025-12-30"
+  },
+  {
+    "id": 7,
+    "text": "면접이 유지되는 9개 특기는 이거예요. 육군 JSA경비병·33경호병·훈련소조교병·MC군사경찰·특임군사경찰·의장병, 공군 특임군사경찰·의장병, 해병대 의장병이에요.",
+    "sourceUrl": "https://www.mma.go.kr/contents.do?mc=mma0003722",
+    "verified": true
+  },
+  {
+    "id": 8,
+    "text": "동점자 선발은 실기 → 자격·면허 → 전공 → 가산점 → 무작위 전산선발 순이에요. 전엔 생년월일이 빠른 사람이 유리했는데 지금은 아니에요.",
+    "sourceUrl": "https://www.mma.go.kr/contents.do?mc=mma0003722",
+    "verified": true,
+    "effectiveFrom": "2025-12-30"
+  },
+  {
+    "id": 9,
+    "text": "2025년 7월 입영자부터 군부대 입영신체검사가 입영 전 병무청 입영판정검사로 바뀌었어요. 모집병 최종합격자도 입영 전에 받아요.",
+    "sourceUrl": "https://www.mma.go.kr/contents.do?mc=mma0003722",
+    "verified": true
+  },
+  {
+    "id": 10,
+    "text": "카투사 접수·추첨일·어학 기준은 병무청 카투사 모집공고 원문을 보고 넣으세요",
+    "sourceUrl": "",
+    "verified": false
+  }
+]

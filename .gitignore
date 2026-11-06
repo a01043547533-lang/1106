@@ -1,0 +1,27 @@
+node_modules/
+.env
+dist/
+server/data/_raw/
+server/data/*.tmp
+server/data/*.lock
+server/data/subscriptions.json
+server/data/sent_log.jsonl
+server/data/ssr_errors.jsonl
+server/data/_backup/
+.checks/chrome/
+.checks/ops-data/
+# Local verification artifacts and alternate environment files
+.checks/
+server/env
+.env.*
+!.env.example
+# Rebuildable API datasets (keep local; eligibility exceeds GitHub's file limit)
+server/data/documents.json
+server/data/eligibility.json
+server/data/jobfit.json
+server/data/mos_master.json
+server/data/scoring_rules.json
+server/data/scoring_rules_special.json
+server/data/social_orgs.json
+server/data/collect_log.jsonl
+client/vite.config.js.timestamp-*.mjs

@@ -1,0 +1,41 @@
+name: Collect and notify
+on:
+  schedule:
+    - cron: '5 * * * *'
+    - cron: '20 15 * * *'
+    - cron: '30 18 * * 0'
+  workflow_dispatch:
+    inputs:
+      task:
+        type: choice
+        default: collect
+        options: [collect, daily, backup]
+
+permissions:
+  contents: read
+concurrency:
+  group: ipdae-data-jobs
+  cancel-in-progress: false
+
+# 웹 서버와 같은 영속 디스크에 접근하는 전용 러너가 필요합니다.
+# 임시 GitHub-hosted 러너로 바꾸면 구독/발송 기록과 스냅샷이 유실됩니다.
+jobs:
+  operations:
+    runs-on: [self-hosted, linux, ipdae]
+    timeout-minutes: 180
+    env:
+      PROJECT_DIR: ${{ vars.IPDAE_PROJECT_DIR }}
+      TASK: ${{ inputs.task || (github.event.schedule == '20 15 * * *' && 'daily') || (github.event.schedule == '30 18 * * 0' && 'backup') || 'collect' }}
+    steps:
+      - name: Run on deployed persistent data
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$PROJECT_DIR"
+          cd "$PROJECT_DIR"
+          if [ "$TASK" = backup ]; then
+            npm run backup
+          else
+            if [ "$TASK" = daily ]; then npm run collect:daily; else npm run collect; fi
+            npm run notify
+          fi
