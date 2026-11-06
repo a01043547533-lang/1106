@@ -180,14 +180,15 @@ app.get('/api/calendar', (req, res) => send(res, q.calendarList({ from: req.quer
 
 // 사회복무요원 복무기관 검색 (API에 필터 변수가 없어 서버에서 거른다)
 app.get('/api/social-orgs', (req, res) => {
-  const items = repo.getDataset('social').items.map(norm);
+  // 원본 region 값이 비어 있어 관할 지방병무청(office)을 지역으로 쓴다. 저장 데이터는 바꾸지 않는다.
+  const items = repo.getDataset('social').items.map(norm).map((o) => (o.region ? o : { ...o, region: o.office || null }));
   const region = req.query.region || '';
   const type = req.query.type || '';
   const qq = String(req.query.q || '').trim();
   const regions = [...new Set(items.map((o) => String(o.region || '').split(' ')[0]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ko'));
   const types = [...new Set(items.map((o) => o.orgType).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ko'));
   let rows = items;
-  if (region) rows = rows.filter((o) => String(o.region || '').startsWith(region));
+  if (region) rows = rows.filter((o) => String(o.region || '').split(' ')[0] === region);
   if (type) rows = rows.filter((o) => o.orgType === type);
   if (qq) rows = rows.filter((o) => `${o.orgName} ${o.parentOrg} ${o.address}`.includes(qq));
   send(res, { total: rows.length, items: rows.slice(0, 100), regions, types });

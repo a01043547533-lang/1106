@@ -38,28 +38,6 @@ export function useReveal(ref, dependency) {
   }, [ref, dependency]);
 }
 
-export function useHomeMotion(ref) {
-  useEffect(() => {
-    const root = ref.current;
-    if (allowed()) root.querySelector('h1')?.classList.add('kinetic-play');
-    const move = (e) => {
-      if (!allowed() || !matchMedia('(hover:hover) and (pointer:fine)').matches) return;
-      const hero = e.target.closest('.home-hero');
-      if (!hero) return;
-      const box = hero.getBoundingClientRect();
-      const clamp = (value) => Math.max(-8, Math.min(8, value));
-      hero.style.setProperty('--paper-x', `${clamp((e.clientX - box.left - box.width / 2) / box.width * 16)}px`);
-      hero.style.setProperty('--paper-y', `${clamp((e.clientY - box.top - box.height / 2) / box.height * 16)}px`);
-    };
-    const leave = (e) => {
-      const hero = e.target.closest('.home-hero');
-      if (hero && !hero.contains(e.relatedTarget)) { hero.style.removeProperty('--paper-x'); hero.style.removeProperty('--paper-y'); }
-    };
-    root.addEventListener('pointermove', move); root.addEventListener('pointerout', leave);
-    return () => { root.removeEventListener('pointermove', move); root.removeEventListener('pointerout', leave); };
-  }, [ref]);
-}
-
 export function useRowMotion(ref, filter) {
   const previous = useRef(filter);
   useEffect(() => {
@@ -94,4 +72,22 @@ export function HoverSummary({ targetRef, rows }) {
     return () => { leave(); root?.removeEventListener('pointermove', move); root?.removeEventListener('pointerleave', leave); media.removeEventListener('change', leave); };
   }, [targetRef, rows]);
   return tip && <aside aria-hidden="true" className="hover-summary" style={{ left: tip.x, top: tip.y }}><b>{tip.data.mosName}</b><div>모집 {tip.data.quota} / 접수 {tip.data.applicants}</div><div>입영월 {tip.data.enlistMonth}</div></aside>;
+}
+
+// 스크롤 시 섹션이 부드럽게 떠오른다. JS가 준비 클래스를 붙이므로 JS가 없어도 내용은 항상 보인다.
+export function useScrollReveal(ref) {
+  useEffect(() => {
+    const root = ref.current;
+    if (!root || !allowed() || typeof IntersectionObserver === 'undefined') return undefined;
+    const targets = [...root.querySelectorAll('[data-reveal]')];
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(({ target, isIntersecting }) => {
+        if (!isIntersecting) return;
+        target.classList.add('revealed');
+        observer.unobserve(target);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    targets.forEach((el) => { el.classList.add('reveal-ready'); observer.observe(el); });
+    return () => { observer.disconnect(); targets.forEach((el) => el.classList.remove('reveal-ready', 'revealed')); };
+  }, [ref]);
 }

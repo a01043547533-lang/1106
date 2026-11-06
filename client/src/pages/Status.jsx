@@ -1,3 +1,4 @@
+import { PageHeading } from '../design.jsx';
 import { useRouteData } from '../data.jsx';
 import { Status, useApi, formatKst as time } from '../components.jsx';
 
@@ -6,8 +7,7 @@ export default function OperationStatus() {
   const live = useApi('/api/health', { interval: 60000 });
   const data = live.data || initial.value;
   return <>
-    <h1>서비스 운영 상태</h1>
-    <p className="lead">현재 서버 함수의 API 조회 상태를 표시해요. 함수가 재시작되면 임시 기록이 초기화됩니다. 이 화면은 1분마다 갱신됩니다.</p>
+    <PageHeading title="서비스 운영 상태" description="현재 서버 함수의 API 조회 상태를 표시해요. 함수가 재시작되면 임시 기록이 초기화됩니다. 이 화면은 1분마다 갱신됩니다." />
     <Status state={initial} />
     {data && <>
       <section className="card">

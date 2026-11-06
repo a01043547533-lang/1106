@@ -1,3 +1,4 @@
+import { PageHeading } from '../design.jsx';
 import { useRef } from 'react';
 import { useReveal } from '../motion.jsx';
 // 특기 목록 + 특기 상세 — 검색 유입의 주력
@@ -12,8 +13,7 @@ export function MosIndex() {
   for (const m of idx.value || []) (groups[m.branch || '기타'] ||= []).push(m);
   return (
     <>
-      <h1>모집병 특기 전체 목록</h1>
-      <p className="lead">특기를 누르면 신체조건, 지원 자격·면허·전공, 회차별 경쟁률을 볼 수 있어요.</p>
+      <PageHeading title="모집병 특기 전체 목록" description="특기를 누르면 신체조건, 지원 자격·면허·전공, 회차별 경쟁률을 볼 수 있어요." />
       <Status state={idx} empty={idx.value && !idx.value.length ? '특기 정보를 모으는 중이에요' : null} />
       {Object.entries(groups).map(([branch, list]) => (
         <section key={branch} className="card">
@@ -31,24 +31,32 @@ export function MosIndex() {
 function RateChart({ rates }) {
   const root = useRef(null);
   useReveal(root, rates.map((r) => `${r.roundLabel}:${r.rate}`).join('|'));
-  const W = 320; const H = 140; const P = 24;
+  // Reserve a readable slot for every round instead of squeezing labels into 320px.
+  const W = Math.max(320, rates.length * 80); const H = 220; const P = 40;
+  const bottom = H - 58;
   const vals = rates.map((r) => r.rate ?? 0);
   const max = Math.max(1, ...vals);
   const x = (i) => P + (i * (W - P * 2)) / Math.max(1, rates.length - 1);
-  const y = (v) => H - P - (v / max) * (H - P * 2);
+  const y = (v) => bottom - (v / max) * (bottom - P);
   const d = rates.map((r, i) => `${i ? 'L' : 'M'}${x(i)},${y(r.rate ?? 0)}`).join(' ');
   return (
-    <svg ref={root} viewBox={`0 0 ${W} ${H}`} className="chart" role="img" aria-label="회차별 마감 지원률">
+    <div className="chart-scroll" tabIndex={0} role="region" aria-label="회차별 마감 지원률 그래프, 가로 스크롤 가능">
+    <svg ref={root} viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ width: W }} className="chart" role="img" aria-label="회차별 마감 지원률">
       <line x1={P} y1={y(1)} x2={W - P} y2={y(1)} className="ref" />
       <text x={W - P} y={y(1) - 4} textAnchor="end" className="axis">1.0</text>
       <path pathLength="1" d={d} className="line draw" />
-      {rates.map((r, i) => (
-        <g key={r.roundLabel}>
+      {rates.map((r, i) => {
+        const parts = /^(\d{4})-(.+)$/.exec(String(r.roundLabel));
+        return <g key={r.roundLabel}>
+          <title>{r.roundLabel}회차 · 지원률 {fmtRate(r.rate)}</title>
           <circle cx={x(i)} cy={y(r.rate ?? 0)} r="3" />
-          <text x={x(i)} y={H - 6} textAnchor="middle" className="axis">{r.roundLabel}</text>
-        </g>
-      ))}
+          <text x={x(i)} y={bottom + 25} textAnchor="middle" className="axis round-axis">
+            {parts ? <><tspan x={x(i)}>{parts[1]}</tspan><tspan x={x(i)} dy="20">{parts[2]}회차</tspan></> : r.roundLabel}
+          </text>
+        </g>;
+      })}
     </svg>
+    </div>
   );
 }
 
@@ -56,7 +64,7 @@ export function MosDetail() {
   const { code } = useParams();
   const st = useRouteData('mos', `/api/mos/${encodeURIComponent(code)}`);
   const d = st.value;
-  if (!d) return <><h1>특기 정보</h1><Status state={st} empty={!st.loading && !st.error ? '특기를 찾을 수 없어요' : null} /></>;
+  if (!d) return <><PageHeading title="특기 정보" /><Status state={st} empty={!st.loading && !st.error ? '특기를 찾을 수 없어요' : null} /></>;
   const m = n(d.mos);
   const s = d.snapshot;
   const paragraphs = describeMos(d);
@@ -68,7 +76,7 @@ export function MosDetail() {
   return (
     <article>
       <nav className="crumb" aria-label="위치"><Link to="/">입대타이밍</Link> › <Link to="/mos">특기 목록</Link> › {d.mosName}</nav>
-      <h1>{d.mosName} 경쟁률·지원자격</h1>
+      <PageHeading title={`${d.mosName} 경쟁률·지원자격`} eyebrow="특기 자세히 보기" />
       <p className="muted">{[d.branch, d.category].filter(Boolean).join(' · ')} 모집병</p>
       {paragraphs.map((p) => <p key={p} className="lead">{p}</p>)}
 

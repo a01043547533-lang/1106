@@ -1,3 +1,4 @@
+import { PageHeading } from '../design.jsx';
 // 입대 준비 · 사회복무 · 알림 · 광고 안내 · 개인정보처리방침 · 이용약관
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -33,8 +34,7 @@ export function Prepare() {
   const pick = (cal.data?.items || []).filter((e) => /입영일자|본인선택/.test(e.title)).slice(0, 3);
   return (
     <>
-      <h1>입대 준비 체크리스트</h1>
-      <p className="lead">지원 전, 합격 후, 입영 당일까지 순서대로 챙길 것을 모았어요.</p>
+      <PageHeading title="입대 준비 체크리스트" description="지원 전, 합격 후, 입영 당일까지 순서대로 챙길 것을 모았어요." />
       <section className="card">
         <h2>지원 전</h2>
         <ul className="checklist">
@@ -74,8 +74,7 @@ export function Social() {
   const d = orgs.data;
   return (
     <>
-      <h1>사회복무요원 복무기관 찾기·소집 일정</h1>
-      <p className="lead">병역판정검사에서 4급(보충역)을 받으면 사회복무요원으로 복무해요. 소집신청 기간에 원하는 기관을 골라 신청할 수 있어요.</p>
+      <PageHeading title="사회복무요원 복무기관 찾기·소집 일정" description="병역판정검사에서 4급(보충역)을 받으면 사회복무요원으로 복무해요. 소집신청 기간에 원하는 기관을 골라 신청할 수 있어요." />
       <section className="card">
         <h2>소집신청 일정</h2>
         {sched.length ? <ul>{sched.map((e) => <li key={e.id}>{e.title} · {e.start} ~ {e.end} · {e.target}</li>)}</ul> : <p className="muted">다가오는 일정이 없어요</p>}
@@ -83,7 +82,7 @@ export function Social() {
       <section className="card">
         <h2>복무기관 검색</h2>
         <div className="row">
-          <label>지역<select value={region} onChange={(e) => setRegion(e.target.value)}><option value="">전체</option>{(d?.regions || []).map((r) => <option key={r}>{r}</option>)}</select></label>
+          <label>지역(관할 병무청)<select value={region} onChange={(e) => setRegion(e.target.value)}><option value="">전체</option>{(d?.regions || []).map((r) => <option key={r}>{r}</option>)}</select></label>
           <label>기관 유형<select value={type} onChange={(e) => setType(e.target.value)}><option value="">전체</option>{(d?.types || []).map((r) => <option key={r}>{r}</option>)}</select></label>
           <label>이름<input value={q} onChange={(e) => setQ(e.target.value)} placeholder="기관명·주소" /></label>
         </div>
@@ -106,8 +105,7 @@ export function Social() {
 export function Alerts() {
   return (
     <>
-      <h1>모집병 접수 알림 받기</h1>
-      <p className="lead">과제 버전에서는 이메일 발송 없이 모집 일정을 조회할 수 있어요. 관심 있는 특기의 접수기간을 확인해 주세요.</p>
+      <PageHeading title="모집병 접수 알림 받기" description="과제 버전에서는 이메일 발송 없이 모집 일정을 조회할 수 있어요. 관심 있는 특기의 접수기간을 확인해 주세요." />
       <section className="card">
         <h2>관심 특기 알림</h2>
         <p className="muted small">특기 상세 페이지에서 "이 특기 알림 받기"로 신청할 수 있어요. <Link to="/mos">특기 목록</Link></p>
@@ -126,7 +124,7 @@ export function Ads() {
   const stats = useApi('/api/stats');
   return (
     <>
-      <h1>광고 안내</h1>
+      <PageHeading title="광고 안내" />
       <section className="card"><h2>누가 오나요</h2><p>입대 6~12개월 전 지원자와 부모님이에요.</p></section>
       <section className="card">
         <h2>얼마나 오나요</h2>
@@ -143,13 +141,13 @@ export function Ads() {
 }
 
 export function Privacy() {
-  return <><h1>개인정보처리방침</h1><section className="card"><p>이 과제용 웹앱은 회원가입과 이메일 알림 신청을 받지 않으며 이메일 주소를 수집하지 않습니다.</p><p>입력한 신체조건·자격은 특기 조회에만 사용합니다. 서버 함수는 검색 입력을 파일에 저장하거나 애플리케이션 로그에 남기지 않습니다. 호스팅 서비스의 요청 로그 정책은 별도로 적용됩니다.</p><p>병무청 인증키는 서버 환경변수에서만 사용하며 React 화면으로 전달하지 않습니다. API 호출 결과 중 공개 모집 정보만 반환합니다.</p><p>IP별 요청 횟수는 서버 함수 메모리에서 일시적으로 집계하며 함수 재시작 시 초기화됩니다. 가상 광고에는 외부 광고 스크립트나 추적 쿠키가 없습니다.</p><p className="muted small">갱신일: 2026-11-06</p></section></>;
+  return <><PageHeading title="개인정보처리방침" /><section className="card"><p>이 과제용 웹앱은 회원가입과 이메일 알림 신청을 받지 않으며 이메일 주소를 수집하지 않습니다.</p><p>입력한 신체조건·자격은 특기 조회에만 사용합니다. 서버 함수는 검색 입력을 파일에 저장하거나 애플리케이션 로그에 남기지 않습니다. 호스팅 서비스의 요청 로그 정책은 별도로 적용됩니다.</p><p>병무청 인증키는 서버 환경변수에서만 사용하며 React 화면으로 전달하지 않습니다. API 호출 결과 중 공개 모집 정보만 반환합니다.</p><p>IP별 요청 횟수는 서버 함수 메모리에서 일시적으로 집계하며 함수 재시작 시 초기화됩니다. 가상 광고에는 외부 광고 스크립트나 추적 쿠키가 없습니다.</p><p className="muted small">갱신일: 2026-11-06</p></section></>;
 }
 
 export function Terms() {
   return (
     <>
-      <h1>이용약관</h1>
+      <PageHeading title="이용약관" />
       <section className="card">
         <p><b>이 사이트는 민간이고 병무청과 아무 관계가 없어요.</b> 정보가 틀렸을 수 있으니 지원 전엔 반드시 병무청 누리집에서 한 번 더 확인하세요.</p>
         <p>병무청 공공데이터를 이용해요(이용허락범위 제한 없음).</p>

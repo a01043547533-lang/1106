@@ -1,3 +1,4 @@
+import { PageHeading } from '../design.jsx';
 import { useRef } from 'react';
 import { useReveal } from '../motion.jsx';
 // 입영월 플래너
@@ -48,10 +49,10 @@ export default function Plan() {
 
   return (
     <div ref={root}>
-      <h1>입영월별 모집병 플래너</h1>
+      <PageHeading title="입영월별 모집병 플래너" />
       <div className="tabs">
-        <button className={tab === 'plan' ? 'on' : ''} onClick={() => setTab('plan')}>입영월 플래너</button>
-        <button className={tab === 'katusa' ? 'on' : ''} onClick={() => setTab('katusa')}>카투사</button>
+        <button aria-pressed={tab === 'plan'} className={tab === 'plan' ? 'on' : ''} onClick={() => setTab('plan')}>입영월 플래너</button>
+        <button aria-pressed={tab === 'katusa'} className={tab === 'katusa' ? 'on' : ''} onClick={() => setTab('katusa')}>카투사</button>
       </div>
 
       {tab === 'plan' && (
@@ -59,7 +60,7 @@ export default function Plan() {
           <p className="lead">원하는 입영월을 최대 3개 고르면 접수부터 입영까지 일정과 특기별 지원률을 비교해 줘요.</p>
           <div className="chips">
             {nextMonths(12).map((m) => (
-              <button key={m} className={`chip ${months.includes(m) ? 'on' : ''}`} onClick={() => toggle(m)}>{m.replace('-', '.')}</button>
+              <button key={m} aria-pressed={months.includes(m)} className={`chip ${months.includes(m) ? 'on' : ''}`} onClick={() => toggle(m)}>{m.replace('-', '.')}</button>
             ))}
           </div>
           {plan.loading && <p className="muted">불러오는 중이에요…</p>}

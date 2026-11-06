@@ -1,3 +1,4 @@
+import { PageHeading } from '../design.jsx';
 import { HoverSummary, useRowMotion } from '../motion.jsx';
 import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -27,14 +28,13 @@ export default function Now() {
 
   return (
     <>
-      <h1>지금 접수 중인 모집병 실시간 지원률</h1>
-      <p className="lead">지원률 = 접수인원 ÷ 모집인원이에요. 1.0 미만은 미달, 3.0 이상은 붐빔으로 표시해요.</p>
+      <PageHeading title="지금 접수 중인 모집병 실시간 지원률" description="지원률 = 접수인원 ÷ 모집인원이에요. 1.0 미만은 미달, 3.0 이상은 붐빔으로 표시해요." />
       <p className="muted small">특기 이름을 눌러 조건을 확인한 뒤, 오른쪽 ‘공식 지원’에서 병무청 통합지원서를 작성해 주세요. 새 창이 열립니다.</p>
       <RulesBox title="중복접수 규칙 보기" ids={[1, 2, 3, 4]} />
 
-      <div className="tabs" role="tablist">
+      <div className="tabs" role="group" aria-label="군별 필터">
         {BRANCHES.map((b) => (
-          <button key={b} role="tab" aria-selected={branch === b} className={branch === b ? 'on' : ''} onClick={() => { setBranch(b); setCategory(''); setUnit(''); }}>{b}</button>
+          <button key={b} aria-pressed={branch === b} className={branch === b ? 'on' : ''} onClick={() => { setBranch(b); setCategory(''); setUnit(''); }}>{b}</button>
         ))}
       </div>
       <div className="filters">
@@ -53,7 +53,7 @@ export default function Now() {
       <Status state={first} empty={!rows.length ? '조건에 맞는 접수 중 특기가 없어요' : null} />
       <div className="table-wrap" ref={tableRef}>
         <table className="grid">
-          <thead><tr><th>특기</th><th>모집분야</th><th>입영</th><th>모집/접수</th><th>지원률</th><th>지원</th></tr></thead>
+          <thead><tr><th>특기</th><th>모집분야</th><th>입영</th><th>모집/접수 (명)</th><th>지원률</th><th>지원</th></tr></thead>
           <tbody>
             {rows.map((s, index) => (
               <tr data-summary={index} key={`${s.branch}-${s.mosCode}-${s.unit}-${s.enlistMonth}`}>

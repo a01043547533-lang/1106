@@ -1,8 +1,8 @@
-import { CountNumber, useClientData, useHomeMotion } from '../motion.jsx';
+import { CountNumber, useClientData, useScrollReveal } from '../motion.jsx';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useRouteData } from '../data.jsx';
-import { AdSlot, BranchBadge, OfficialApplyLink, RateBar, Status, monthLabel, useApi } from '../components.jsx';
+import { AdSlot, CertificateResources, BranchBadge, OfficialApplyLink, RateBar, Status, monthLabel, useApi } from '../components.jsx';
 
 function Countdown({ to }) {
   const [now, setNow] = useState(null);
@@ -12,12 +12,10 @@ function Countdown({ to }) {
   const left = Math.max(0, end - now);
   const d = Math.floor(left / 86400000); const h = Math.floor((left % 86400000) / 3600000);
   const m = Math.floor((left % 3600000) / 60000); const s = Math.floor((left % 60000) / 1000);
-  return <span className={left > 0 && left < 86400000 ? 'urgent countdown-card' : 'countdown-card'}>마감까지 <span key={Math.floor(left / 1000)} className="countdown-tick">{d}일 {h}시간 {m}분 {s}초</span></span>;
+  return <span className={left > 0 && left < 86400000 ? 'urgent countdown' : 'countdown'}>{d}일 {h}시간 {m}분 {s}초</span>;
 }
 
 export default function Home() {
-  const root = useRef(null);
-  useHomeMotion(root);
   const countStats = useClientData('stats');
   const countTop = useClientData('now');
   const now = useRouteData('now', '/api/now?sort=rate_asc', (r) => r.items.slice(0, 5));
@@ -35,86 +33,114 @@ export default function Home() {
     open.push(s);
   }
 
+  const top = rounds.data?.items.slice(0, 5) || now.value;
+  const root = useRef(null);
+  useScrollReveal(root);
+
   return (
-    <div ref={root} className="home-page">
-      <section className="home-hero" aria-labelledby="home-title">
-        <div className="hero-copy">
-          <p className="eyebrow"><span aria-hidden="true">✳</span> 나의 다음 계획, 입대타이밍</p>
-          <h1 id="home-title" className="kinetic"><span><span>나에게 맞는 입대 시기,</span></span><span><span>한눈에 찾으세요.</span></span></h1>
-          <p className="hero-description">모집 일정부터 경쟁률, 지원 조건까지.<br />입대 준비에 필요한 정보를 한곳에서 확인하세요.</p>
-          <nav className="hero-actions" aria-label="주요 바로가기">
-            <Link className="hero-button primary" to="/find">내 조건으로 특기 찾기 <span aria-hidden="true">↗</span></Link>
-            <Link className="hero-button secondary" to="/now">지금 접수 확인 <span aria-hidden="true">→</span></Link>
-          </nav>
-          <p className="hero-source">병무청 공공데이터로 살펴보는 나의 입대 계획</p>
+    <div className="home-page" ref={root}>
+      <section className="band band-yellow hero" aria-labelledby="home-title">
+        <div className="hero-stickers" aria-hidden="true">
+          <span className="sticker s1">접수 중</span>
+          <span className="sticker s2">지원률 확인</span>
+          <span className="sticker s3">입영월 고르기</span>
+          <span className="sticker s4">특기 찾기</span>
         </div>
-        <div className="hero-art" aria-hidden="true">
-          <div className="paper-decoration paper-calendar"><span className="paper-label">MY NEXT CHAPTER</span><b>나의 입대 계획</b><div className="drawn-calendar"><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><i /><i /><i className="marked">✓</i><i /><i /><i /><i /><i /><i /><i /></div></div>
-          <figure className="paper-decoration soldier-paper"><span className="paper-tape" /><div className="soldier-photo"><img src="/preparation-mate.png" width="196" height="201" alt="" /></div><figcaption>준비는 차근차근, 함께!</figcaption><svg className="paper-scribble" viewBox="0 0 120 18"><path d="M3 12 Q48 1 115 9 M20 16 Q67 6 105 13" /></svg></figure>
-          <div className="paper-decoration paper-note"><span className="drawn-check">✓</span><div>일정 확인하고<br /><b>나답게 준비하기</b></div></div>
-          <svg className="doodle-star" viewBox="0 0 60 60"><path d="m30 3 3 19 17-12-12 18 19 4-20 3 13 16-18-11-3 18-4-20-17 12 12-18-18-4 20-2L10 10l17 12Z" /></svg>
+        <div className="band-inner">
+          <h1 id="home-title" tabIndex={-1}>입대 계획의 시작,<br />나에게 맞는 타이밍</h1>
+          <p className="hero-lead">모집 일정과 지원 조건을 확인하고, 나에게 맞는 입대 시기를 찾아보세요.</p>
+          <p className="intro-actions">
+            <Link className="button primary" to="/find">내 조건으로 특기 찾기</Link>
+            <Link className="button outline" to="/now">지금 접수 보기</Link>
+          </p>
+          <div className="window" aria-labelledby="rounds">
+            <div className="window-bar" aria-hidden="true"><i /><i /><i /></div>
+            <div className="window-body">
+              <div className="section-heading"><h2 id="rounds"><span className="live-dot" aria-hidden="true" />지금 접수 중인 회차</h2><Link to="/now">접수 전체 보기 →</Link></div>
+              <Status state={rounds} />
+              {rounds.data && !open.length && <p className="muted">지금 접수 중인 회차가 없어요</p>}
+              {open.length > 0 && <div className="table-wrap"><table className="doc-table">
+                <thead><tr><th>군</th><th>모집분야</th><th>회차</th><th className="num">마감까지</th></tr></thead>
+                <tbody>
+                  {open.slice(0, 6).map((s) => (
+                    <tr key={`${s.branch}-${s.category}-${s.roundLabel}`}>
+                      <td><BranchBadge branch={s.branch} /></td>
+                      <td><b>{s.category}</b></td>
+                      <td>{s.roundLabel}회차</td>
+                      <td className="num">{s.applyEnd ? <Countdown to={s.applyEnd} /> : '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table></div>}
+              <dl className="meta-table" aria-label="데이터 출처와 현황">
+                <div><dt>데이터 출처</dt><dd>병무청 공공데이터</dd></div>
+                {stats.value && <div><dt>추적 중인 특기</dt><dd><CountNumber value={stats.value.specialtiesTracked} animate={countStats} />개</dd></div>}
+                {stats.value && <div><dt>접수현황 기록</dt><dd><CountNumber value={stats.value.snapshotsCount} animate={countStats} />건</dd></div>}
+                <div><dt>갱신 주기</dt><dd>30초마다 접수현황 갱신</dd></div>
+              </dl>
+            </div>
+          </div>
         </div>
       </section>
 
-      <div className="home-content">
-      <section className="home-section rounds-section">
-        <div className="section-heading"><div><p className="eyebrow">01 / 지금의 기회</p><h2>지금 접수 중인 회차</h2></div><Link to="/now">접수 전체 보기 ↗</Link></div>
-        <Status state={rounds} />
-        {rounds.data && !open.length && <p className="muted">지금 접수 중인 회차가 없어요</p>}
-        <ul className="round-cards">
-          {open.slice(0, 6).map((s) => (
-            <li key={`${s.branch}-${s.category}-${s.roundLabel}`}>
-              <div className="round-top"><BranchBadge branch={s.branch} /><span className="open-label">● 접수 중</span></div><b>{s.category}</b><span className="muted small">{s.roundLabel}회차</span>{s.applyEnd && <Countdown to={s.applyEnd} />}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="home-section">
-        <div className="section-heading"><div><p className="eyebrow">02 / 숫자로 살펴보기</p><h2>지원률 낮은 특기 <span className="heading-tag">TOP 5</span></h2></div><Link to="/now">특기 비교하기 ↗</Link></div>
-        <p className="section-description">현재 접수 중인 특기를 지원률이 낮은 순서로 모았어요.</p>
-        <Status state={now} empty={now.value && !now.value.length ? '접수 중인 특기가 아직 없어요' : null} />
-        <div className="top5">
-          {(rounds.data?.items.slice(0, 5) || now.value)?.map((s, i) => (
-            <Link key={`${s.branch}-${s.mosCode}-${s.unit}-${s.enlistMonth}`} to={`/mos/${encodeURIComponent(s.mosCode)}`} className="topcard">
-              <div className="topcard-heading"><BranchBadge branch={s.branch} /><span className="rank">{i + 1}위</span></div>
-              <div className="specialty-name"><b>{s.mosName}</b><span className="specialty-context">{[s.unit, monthLabel(s.enlistMonth)].filter(Boolean).join(' · ')}</span></div>
-              <dl className="card-numbers"><div><dt>모집 인원</dt><dd>{s.quota}<small>명</small></dd></div><div><dt>접수 인원</dt><dd>{s.applicants}<small>명</small></dd></div></dl>
-              <div className="card-rate"><span className="small muted">지원률</span><RateBar rate={s.rate} countUp={countTop} /></div>
-              <span className="card-detail">특기 자세히 <span aria-hidden="true">↗</span></span>
-            </Link>
-          ))}
+      <section className="band band-cream" aria-labelledby="low-rate">
+        <div className="band-inner">
+          <div className="band-heading" data-reveal><h2 id="low-rate">지원률 낮은 특기 5개</h2><p>현재 접수 중인 특기를 지원률이 낮은 순서로 모았어요.</p></div>
+          <Status state={now} empty={now.value && !now.value.length ? '접수 중인 특기가 아직 없어요' : null} />
+          {top?.length > 0 && <div className="table-wrap" data-reveal><table className="doc-table rank-table">
+            <thead><tr><th className="num">순위</th><th>특기</th><th className="num">뽑는 인원</th><th className="num">지원한 인원</th><th>지원률</th></tr></thead>
+            <tbody>
+              {top.map((s, i) => (
+                <tr key={`${s.branch}-${s.mosCode}-${s.unit}-${s.enlistMonth}`}>
+                  <td className="num">{i + 1}</td>
+                  <td><Link className="topcard" to={`/mos/${encodeURIComponent(s.mosCode)}`}>{s.mosName}</Link><div className="muted small">{[s.branch, s.unit, monthLabel(s.enlistMonth)].filter(Boolean).join(' · ')}</div></td>
+                  <td className="num">{s.quota}명</td>
+                  <td className="num">{s.applicants}명</td>
+                  <td><RateBar rate={s.rate} countUp={countTop} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table></div>}
+          <aside className="note" data-reveal aria-labelledby="rate-help-title">
+            <p className="note-title" id="rate-help-title">지원률 읽는 법</p>
+            <p>지원률은 접수 인원 ÷ 모집 인원이에요. <strong>1.0 미만</strong>(미달)이면 뽑는 인원보다 지원한 사람이 적다는 뜻이에요. 접수 중에는 달라질 수 있고, 최종 합격을 뜻하거나 보장하지는 않아요.</p>
+            <p className="note-links"><Link to="/now">특기 비교하기</Link> · <Link to="/find">내가 지원할 수 있는지 확인</Link> · <Link to="/plan">입영월이 맞는지 확인</Link></p>
+          </aside>
         </div>
-        <p className="muted small">지원률은 접수 인원 ÷ 모집 인원이에요. ‘미달’은 현재 지원률 1.0 미만이며, 최종 합격을 뜻하지 않아요.</p>
-        <details className="home-reading-guide">
-          <summary>지원률이 낮으면 어떻게 살펴보면 좋을까요?</summary>
-          <div><p>현재 지원률과 함께 지원 자격, 입영월, 접수 마감일을 확인해 보세요. 접수가 끝날 때까지 지원률은 바뀔 수 있어요.</p>
-          <ol><li><Link to="/find">내 조건으로 지원 가능한 특기 확인하기</Link></li><li><Link to="/now">모집 인원과 접수 인원 비교하기</Link></li><li><Link to="/plan">희망 입영월로 일정 살펴보기</Link></li></ol></div>
-        </details>
       </section>
 
-      <section className="home-section calendar-section">
-        <div className="section-heading"><div><p className="eyebrow">03 / 잊지 말고 체크</p><h2>다가오는 일정</h2></div><Link to="/calendar">일정 전체 보기 ↗</Link></div>
-        <Status state={cal} empty={cal.value && !cal.value.length ? '다가오는 일정이 없어요' : null} />
-        <ul className="home-events">
-          {cal.value?.map((e) => (
-            <li key={e.id}><time dateTime={e.start}>{e.start?.slice(5, 10).replace('-', '.')}</time><b>{e.title}</b><span className={`badge ${e.verified ? 'green' : 'gray'}`}>{e.verified ? '확인된 일정' : '공고 확인 필요'}</span></li>
-          ))}
-        </ul>
+      <section className="band band-coral" aria-labelledby="events">
+        <div className="band-inner">
+          <div className="band-heading" data-reveal><h2 id="events">다가오는 일정</h2><p>접수 시작과 소집신청 일정을 날짜순으로 보여 드려요.</p></div>
+          <div className="panel" data-reveal>
+            <Status state={cal} empty={cal.value && !cal.value.length ? '다가오는 일정이 없어요' : null} />
+            <ul className="home-events">
+              {cal.value?.map((e) => (
+                <li key={e.id}><time dateTime={e.start}>{e.start?.slice(5, 10).replace('-', '.')}</time><span>{e.title}</span><span className={`badge ${e.verified ? 'green' : 'gray'}`}>{e.verified ? '확인된 일정' : '공고 확인 필요'}</span></li>
+              ))}
+            </ul>
+            <p className="panel-link"><Link to="/calendar">일정 전체 보기 →</Link></p>
+          </div>
+        </div>
       </section>
 
-      <section className="home-section explore-section">
-        <div className="section-heading"><div><p className="eyebrow">04 / 한 걸음씩 준비해요</p><h2>궁금한 것부터, 차근차근.</h2></div></div>
-        <div className="explore-grid"><Link to="/mos"><span className="explore-icon" aria-hidden="true">⌕</span><h3>나에게 맞는 특기는?</h3><p>군별 지원 자격과 경쟁률을 살펴보세요.</p><b>특기 둘러보기 ↗</b></Link><Link to="/prepare"><span className="explore-icon" aria-hidden="true">✓</span><h3>입대 준비, 어디서부터?</h3><p>필요한 준비물과 체크리스트를 확인하세요.</p><b>입대 준비 안내 ↗</b></Link><Link to="/plan"><span className="explore-icon" aria-hidden="true">▦</span><h3>언제 입대하면 좋을까요?</h3><p>희망 입영월에 맞춰 일정을 계획하세요.</p><b>입영월 플래너 ↗</b></Link></div>
+      <div className="band band-maroon"><div className="band-inner" data-reveal><CertificateResources /></div></div>
+
+      <section className="band band-peach closing" aria-labelledby="apply-title">
+        <svg className="sparkles" viewBox="0 0 600 240" aria-hidden="true" focusable="false">
+          <path className="spark k1" d="M60 120q4 22 26 26q-22 4-26 26q-4-22-26-26q22-4 26-26Z" />
+          <path className="spark k2" d="M520 40q3 16 19 19q-16 3-19 19q-3-16-19-19q16-3 19-19Z" />
+          <path className="spark k3" d="M548 74q2 10 12 12q-10 2-12 12q-2-10-12-12q10-2 12-12Z" />
+          <path className="spark k4" d="M500 176q4 18 22 22q-18 4-22 22q-4-18-22-22q18-4 22-22Z" />
+        </svg>
+        <div className="band-inner" data-reveal>
+          <h2 id="apply-title">지원은 병무청에서</h2>
+          <p>본인인증과 최종 지원은 병무청 누리집에서 진행해요.</p>
+          <OfficialApplyLink>병무청 지원하기 ↗</OfficialApplyLink>
+        </div>
       </section>
 
-      <aside className="official-strip"><div><b>마음에 드는 특기를 찾았나요?</b><p>본인인증과 최종 지원은 병무청 누리집에서 진행해요.</p></div><OfficialApplyLink>병무청 지원하기 ↗</OfficialApplyLink></aside>
-
-      {stats.value && (
-        <p className="muted">조회한 특기 <CountNumber value={stats.value.specialtiesTracked} animate={countStats} />개 · 접수현황 <CountNumber value={stats.value.snapshotsCount} animate={countStats} />건</p>
-      )}
-      <AdSlot size="320x100" />
-      </div>
+      <div className="band band-cream"><div className="band-inner"><AdSlot size="320x100" /></div></div>
     </div>
   );
 }

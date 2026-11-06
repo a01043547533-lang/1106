@@ -1,3 +1,4 @@
+import { PageHeading } from '../design.jsx';
 // ★ 특기 찾기 — 내 신체조건·자격으로 갈 수 있는 특기. 입력은 서버에 저장되지 않는다.
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -31,11 +32,10 @@ export default function Find() {
   const d = res.data;
   return (
     <>
-      <h1>내 조건으로 갈 수 있는 군 특기 찾기</h1>
-      <p className="lead">키·몸무게·시력·신체등급과 가진 자격을 넣으면 지원할 수 있는 특기와 안 되는 이유를 알려 줘요. 전부 비워도 검색돼요.</p>
+      <PageHeading title="내 조건으로 갈 수 있는 군 특기 찾기" description="키·몸무게·시력·신체등급과 가진 자격을 넣으면 지원할 수 있는 특기와 안 되는 이유를 알려 줘요. 전부 비워도 검색돼요." />
       <RulesBox title="출결·면접 폐지 안내 보기" ids={[5, 6]} />
 
-      <form className="card form" onSubmit={search}>
+      <form className="card form" onSubmit={search} aria-busy={res.busy}>
         <h2>1단계 · 내 조건</h2>
         <div className="row">
           <label>신장(cm)<input inputMode="decimal" value={f.height} onChange={set('height')} placeholder="175" /></label>
@@ -47,15 +47,15 @@ export default function Find() {
         </div>
         <h2>2단계 · 내 자격·면허·전공</h2>
         <MultiPicker value={items} onChange={setItems} />
-        <h2>3단계 · 바람</h2>
-        <label>군
-          <select value={f.branch} onChange={set('branch')}><option value="">전체</option>{['육군', '해군', '공군', '해병대'].map((b) => <option key={b}>{b}</option>)}</select>
+        <h2>3단계 · 지원 희망 군</h2>
+        <label aria-label="지원 희망 군">
+          <select aria-label="지원 희망 군" value={f.branch} onChange={set('branch')}><option value="">전체</option>{['육군', '해군', '공군', '해병대'].map((b) => <option key={b}>{b}</option>)}</select>
         </label>
         <p className="muted small">입력한 값은 서버에 저장되지 않아요. 검색에만 쓰고 바로 버려요.</p>
         <button type="submit" className="primary" disabled={res.busy}>{res.busy ? '찾는 중…' : '조회'}</button>
       </form>
 
-      {res.error && <p className="error">{res.error}</p>}
+      {res.error && <p className="error" role="alert">{res.error}</p>}
       {d && d.total === 0 && <p className="card">특기 정보를 모으는 중이에요. 잠시 뒤 다시 시도해 주세요.</p>}
       {d && d.total > 0 && !d.groups.ok.length && (
         <p className="card">조건을 하나만 빼 보세요.{d.topReasons[0] && <> 가장 많이 걸린 조건은 <b>{d.topReasons[0][0]}</b>이에요.</>}</p>
