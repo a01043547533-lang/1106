@@ -75,7 +75,7 @@ export default function Plan() {
 
   return (
     <div ref={root}>
-      <PageHeading title="입영월별 모집병 플래너" />
+      <PageHeading title="입영월별 모집병 플래너" description="언제 돌아와야 하는지(복학·복직 월)만 넣으면 그에 맞는 입영월과 그 달에 입영하는 모집 회차를 보여 줘요. 입영월을 직접 골라도 돼요." />
       <div className="tabs">
         <button aria-pressed={tab === 'plan'} className={tab === 'plan' ? 'on' : ''} onClick={() => setTab('plan')}>입영월 플래너</button>
         <button aria-pressed={tab === 'katusa'} className={tab === 'katusa' ? 'on' : ''} onClick={() => setTab('katusa')}>카투사</button>
@@ -83,11 +83,16 @@ export default function Plan() {
 
       {tab === 'plan' && (
         <>
-          <p className="lead">원하는 입영월을 최대 3개 고르면 접수부터 입영까지 일정과 특기별 지원률을 비교해 줘요.</p>
+          <ol className="score-guide" aria-label="사용 순서">
+            <li aria-current={!goal.month && !months.length ? 'step' : undefined}><b>01</b><span>돌아올 달 넣기 (또는 입영월 직접 고르기)</span></li>
+            <li aria-current={(goal.month || months.length) && !plan.data ? 'step' : undefined}><b>02</b><span>맞는 입영월 확인</span></li>
+            <li aria-current={plan.data ? 'step' : undefined}><b>03</b><span>그 달 회차의 접수기간 보기</span></li>
+          </ol>
           <section className="card goal-box">
-            <h2>돌아올 시점부터 거꾸로 계산하기</h2>
+            <h2>1단계 · 언제 돌아와야 하나요?</h2>
+            <p className="small">복학이나 복직하고 싶은 달을 고르면, 복무기간을 빼서 입영해야 하는 달을 계산해요. 예: 2028년 9월 복학 → 2026년 12월~2027년 2월 입영.</p>
             <div className="row">
-              <label>복귀 희망 월 (복학·복직)<input type="month" value={goal.month} onChange={(e) => setGoal({ ...goal, month: e.target.value })} /></label>
+              <label>돌아올 달 (복학·복직)<input type="month" value={goal.month} onChange={(e) => setGoal({ ...goal, month: e.target.value })} /></label>
               <label>군<select value={goal.branch} onChange={(e) => setGoal({ ...goal, branch: e.target.value })}>{['육군', '해군', '공군', '해병대'].map((b) => <option key={b}>{b}</option>)}</select></label>
               <label>전역 뒤 여유<select value={goal.slack} onChange={(e) => setGoal({ ...goal, slack: Number(e.target.value) })}>{[0, 1, 2, 3].map((n) => <option key={n} value={n}>{n}개월</option>)}</select></label>
             </div>
@@ -104,6 +109,8 @@ export default function Plan() {
                 </div>)}
             {!goal.month && <p className="muted small">예: 2028년 3월 복학이면 육군(18개월)은 2026년 7~8월 입영이 맞아요. 전역 뒤 한 달은 비워 두는 편이 좋아요.</p>}
           </section>
+          <h2 className="plan-step">2단계 · 입영월 고르기 <span className="muted small">(최대 3개 · 1단계를 넣으면 자동으로 골라져요)</span></h2>
+          <p className="muted small">초록 점이 있는 달에는 지금 접수 중이거나 예정인 회차가 있어요.</p>
           <div className="chips month-chips">
             {nextMonths(12).map((m) => { const i = monthInfo(m); const live = i ? i.open + i.upcoming : 0; return (
               <button key={m} aria-pressed={months.includes(m)} className={`chip ${months.includes(m) ? 'on' : ''}${live ? ' has-live' : ''}`} onClick={() => toggle(m)} title={i ? `접수 중 ${i.open} · 예정 ${i.upcoming} · 마감 ${i.closed}` : '아직 회차 없음'}>{ym(m)}{live ? <span className="chip-dot" aria-label={`접수 중·예정 ${live}건`} /> : null}</button>
@@ -117,6 +124,8 @@ export default function Plan() {
               {un.length > 0 && <> 입영월 미정으로 접수 중·예정: {un.map((r) => `${r.branch} ${r.category} ${r.round}회차`).join(', ')} → <Link to="/now">지금 접수</Link></>}
             </p>;
           })()}
+          {months.length > 0 && <h2 className="plan-step">3단계 · 고른 달에 입영하는 회차</h2>}
+          {!months.length && <p className="feedback empty" role="status">아직 고른 달이 없어요. 위에서 돌아올 달을 넣거나 입영월 칩을 눌러 보세요.</p>}
           {plan.loading && <p className="muted">불러오는 중이에요…</p>}
           {(plan.data?.items || []).map((it) => (
             <section key={it.month} className="card">

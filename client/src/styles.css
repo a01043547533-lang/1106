@@ -438,6 +438,8 @@ details.result-group[open] > summary { margin-bottom: 12px; }
 .calc-table-wrap { margin-top: 18px; }
 .calc-table-wrap summary { padding: 10px 0; }
 .goal-box { background: var(--blue-soft); border-color: #cfdcea; }
+.plan-step { margin: 26px 0 8px; font-size: 19px; }
+.plan-step .muted.small { font-weight: 500; }
 .month-chips .chip { position: relative; }
 .chip-dot { display: inline-block; width: 8px; height: 8px; margin-left: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 2px #fff; }
 .chip.on .chip-dot { box-shadow: 0 0 0 2px var(--yellow); }
