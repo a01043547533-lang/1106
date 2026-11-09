@@ -12,6 +12,13 @@ export const formatKst = (value) => value && Number.isFinite(Date.parse(value))
   ? `${new Date(Date.parse(value) + 9 * 3600000).toISOString().slice(0, 19).replace('T', ' ')} KST` : '기록 없음';
 export const monthLabel = (m) => (!m || m === '*' ? '입영월 미정' : m.replace('-', '년 ') + '월');
 
+// 입력값이 잠시 멈춘 뒤에만 바뀌는 값(검색 요청을 줄인다)
+export function useDebounced(value, ms = 300) {
+  const [v, setV] = useState(value);
+  useEffect(() => { const id = setTimeout(() => setV(value), ms); return () => clearTimeout(id); }, [value, ms]);
+  return v;
+}
+
 // 클라이언트에서만 부르는 API (SSR 데이터가 없는 화면용)
 // 같은 주소의 동시 요청은 하나로 합치고 잠깐 재사용한다(lib/fetch-cache.js). 주기 갱신은 새로 받는다.
 export function useApi(url, { interval = 0 } = {}) {
@@ -156,15 +163,18 @@ export function RulesBox({ title, ids }) {
 
 // API가 제공하는 이름 그대로 선택해 기존 검색·배점 요청에 전달한다.
 export function MultiPicker({ value, onChange, placeholder = '자격증·면허·전공 이름' }) {
-  const all = useApi('/api/eligible-items');
   const inputId = useId();
   const [q, setQ] = useState('');
   const [limit, setLimit] = useState(20);
   const [kind, setKind] = useState('');
+  // 입력을 멈춘 뒤 250ms에 한 번만 서버에 묻는다(글자마다 요청하지 않게). 목록 전체(3만 개)는 내려받지 않는다.
+  const debounced = useDebounced(q.trim(), 250);
+  const all = useApi(`/api/eligible-items?${new URLSearchParams({ ...(debounced ? { q: debounced } : {}), ...(kind ? { kind } : {}) })}`);
   const meta = all.data?.meta || [];
-  const kinds = [...new Set(meta.map((m) => m.kind))];
-  const list = (kind ? meta.filter((m) => m.kind === kind) : meta).map((m) => m.item);
-  const hits = q.trim() ? list.filter(x => x.includes(q.trim())) : list;
+  const kinds = all.data?.kinds || [];
+  const list = meta.map((m) => m.item);
+  const hits = q.trim() && q.trim() !== debounced ? list.filter((x) => x.includes(q.trim())) : list;
+  const partial = Boolean(all.data?.partial);
   const toggle = name => onChange(value.includes(name) ? value.filter(x => x !== name) : [...value, name]);
   return <div className="picker">
     <p className="picker-help">이름으로 검색하거나 목록에서 고르세요. 종류를 고르면 그 안에서 지원할 수 있는 특기가 많은 순으로 보여 줘요. 여러 개 고를 수 있어요.</p>
@@ -181,6 +191,7 @@ export function MultiPicker({ value, onChange, placeholder = '자격증·면허�
         </label>)}</div> : <p className="muted" role="status">일치하는 항목이 없어요. 다른 이름으로 검색해 주세요.</p>}
       </fieldset>
       {hits.length > limit && <button type="button" className="picker-more" onClick={() => setLimit(n => n + 20)}>항목 더 보기 ({Math.min(limit, hits.length)} / {hits.length.toLocaleString()})</button>}
+      {partial && hits.length <= limit && <p className="muted small">{q.trim() ? '일치하는 항목이 더 있으면 이름을 더 적어 주세요.' : `전체 ${Number(all.data.total).toLocaleString()}개 중 많이 쓰는 항목만 보여 줘요. 이름으로 검색하면 나머지도 찾을 수 있어요.`}</p>}
     </>}
   </div>;
 }

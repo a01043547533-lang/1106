@@ -6,7 +6,7 @@
   "functions": {
     "api/index.js": {
       "maxDuration": 60,
-      "includeFiles": "server/data/{prepared/**,calendar.json,final_rates.json,links.json,lottery.json,rules.json,service_terms.json,snapshots.jsonl,forecast.json,exam_schedule.json}",
+      "includeFiles": "server/data/{prepared/**,calendar.json,final_rates.json,links.json,lottery.json,rules.json,service_terms.json,snapshots.jsonl,forecast.json,exam_schedule.json,eligible_items.json}",
       "excludeFiles": "{server/.env,server/env,server/data/_raw/**,server/data/_backup/**,.checks/**}"
     }
   },

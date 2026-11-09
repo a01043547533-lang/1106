@@ -190,8 +190,10 @@ app.get('/api/eligible', (req, res) => {
 // 자격·면허·전공 목록. 가나다순이면 「무술단증」이 맨 위라 쓸모가 없어, 지원 가능한 특기 수가 많은 순으로 준다(같으면 가나다).
 const eligibleItemsCache = new WeakMap();
 app.get('/api/eligible-items', (req, res) => {
-  const ds = repo.getDataset('eligible');
-  let items = eligibleItemsCache.get(ds);
+  // 빌드 때 만든 eligible_items.json이 있으면 그것을 쓰고(즉시), 없을 때만 큰 자료에서 센다.
+  const pre = repo.getEligibleItemsFile();
+  const ds = pre ? pre : repo.getDataset('eligible');
+  let items = pre ? pre.items : eligibleItemsCache.get(ds);
   if (!items) {
     const count = new Map();
     const kindOf = new Map();
@@ -201,7 +203,14 @@ app.get('/api/eligible-items', (req, res) => {
     items = [...count.entries()].sort((a, b) => (kindOrder[kindOf.get(a[0])] ?? 9) - (kindOrder[kindOf.get(b[0])] ?? 9) || b[1].size - a[1].size || a[0].localeCompare(b[0], 'ko')).map(([item]) => ({ item, kind: kindOf.get(item), specialties: count.get(item).size }));
     eligibleItemsCache.set(ds, items);
   }
-  send(res, { items: items.map((x) => x.item), meta: items, order: 'kind,specialties' });
+  const q = String(req.query.q || '').trim();
+  const kind = String(req.query.kind || '').trim();
+  let list = kind ? items.filter((x) => x.kind === kind) : items;
+  const total = list.length;
+  if (q) list = list.filter((x) => x.item.includes(q)).slice(0, 200);
+  else if (!kind) { const per = {}; list = list.filter((x) => (per[x.kind] = (per[x.kind] || 0) + 1) <= 80); }
+  else list = list.slice(0, 200);
+  send(res, { items: list.map((x) => x.item), meta: list, total, kinds: [...new Set(items.map((x) => x.kind))], order: 'kind,specialties', partial: list.length < total });
 });
 
 app.get('/api/calendar', (req, res) => send(res, q.calendarList({ from: req.query.from || undefined, to: req.query.to || undefined })));

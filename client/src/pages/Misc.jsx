@@ -2,7 +2,7 @@ import { PageHeading } from '../design.jsx';
 // 입대 준비 · 사회복무 · 일정 챙기기 · 소개 · 문의 · 개인정보처리방침 · 이용약관
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { RulesBox, Status, addMonths, monthLabel, useApi } from '../components.jsx';
+import { RulesBox, Status, addMonths, monthLabel, useApi, useDebounced } from '../components.jsx';
 import { MMA_PLANS_URL, MMA_PORTAL_URL } from '../lib/official.js';
 
 const PRIVACY_UPDATED = '2026-11-09';
@@ -105,7 +105,8 @@ export function Social() {
   const [region, setRegion] = useState('');
   const [type, setType] = useState('');
   const [q, setQ] = useState('');
-  const orgs = useApi(`/api/social-orgs?${new URLSearchParams({ region, type, q })}`);
+  const dq = useDebounced(q.trim(), 350);
+  const orgs = useApi(`/api/social-orgs?${new URLSearchParams({ region, type, q: dq })}`);
   const cal = useApi('/api/calendar');
   const sched = (cal.data?.items || []).filter((e) => e.kind === '사회복무');
   const d = orgs.data;

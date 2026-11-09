@@ -148,9 +148,13 @@ export default function Plan() {
               <li key={e.id}>{e.title} · {e.start} ~ {e.end} {!e.verified && <span className="badge gray">공고 확인 필요</span>}</li>
             ))}
           </ul>
-          <h3>어학 기준 체크리스트</h3>
-          <p className="muted">어학 기준 점수는 병무청 카투사 모집공고 원문을 보고 확인하세요. 이 사이트는 어학 점수를 계산하지 않아요.</p>
-          <p className="muted">월별 지원자 수는 7월 접수 때 수집돼요.</p>
+          <h3>지원 전에 볼 것</h3>
+          <ul>
+            <li>어학 기준(TOEIC 780 등 8개 시험), 연령, 평생 1회 제한은 <Link to="/guide/katusa">카투사 가이드</Link>에 정리했어요. 접수 전에 공고 원문으로 다시 확인하세요.</li>
+            <li>카투사는 추첨이라 배점이 없고, 다른 모집분야와 중복접수가 제한되는 조합이 있어요. <Link to="/guide/recruit-flow">중복접수 규칙</Link></li>
+            <li>접수는 7월이에요. 떨어졌을 때의 하반기 회차 계획을 「입영월 플래너」 탭에서 같이 세워 두세요.</li>
+          </ul>
+          <p className="muted small">접수 기간의 지원자 수는 7월 접수 때 이 사이트에 수집돼요.</p>
         </section>
       )}
     </div>

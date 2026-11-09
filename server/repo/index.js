@@ -32,6 +32,8 @@ export const getLottery = () => readJson('lottery.json', []);
 export const getRules = () => readJson('rules.json', []);
 export const getLinks = () => readJson('links.json', {});
 export const getForecast = () => readJson('forecast.json', null);
+let eligibleItemsFile; // 한 번만 읽는다
+export const getEligibleItemsFile = () => (eligibleItemsFile === undefined ? (eligibleItemsFile = readJson('eligible_items.json', null)) : eligibleItemsFile);
 export const getExamSchedule = () => readJson('exam_schedule.json', null);
 // 맞춤형 특기병 정보: 실시간 조회값이 있으면 그것을, 없으면 저장된 기준자료를 쓴다.
 const toNum = (v) => (v === null || v === undefined || v === '' ? null : Number(v));
