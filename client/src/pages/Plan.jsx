@@ -92,7 +92,9 @@ export default function Plan() {
             <h2>1단계 · 언제 돌아와야 하나요?</h2>
             <p className="small">복학이나 복직하고 싶은 달을 고르면, 복무기간을 빼서 입영해야 하는 달을 계산해요. 예: 2028년 9월 복학 → 2026년 12월~2027년 2월 입영.</p>
             <div className="row">
-              <label>돌아올 달 (복학·복직)<input type="month" value={goal.month} onChange={(e) => setGoal({ ...goal, month: e.target.value })} /></label>
+              {/* 달력 입력(type=month)은 브라우저에 따라 글자칸으로 바뀌어 형식이 어긋나므로, 어디서나 같은 연도·월 선택 상자를 쓴다 */}
+              <label>돌아올 연도<select value={goal.month.slice(0, 4)} onChange={(e) => setGoal({ ...goal, month: e.target.value ? `${e.target.value}-${goal.month.slice(5, 7) || '03'}` : '' })}><option value="">선택</option>{Array.from({ length: 4 }, (_, i) => String(new Date().getFullYear() + i)).map((y) => <option key={y} value={y}>{y}년</option>)}</select></label>
+              <label>돌아올 월<select value={goal.month.slice(5, 7)} onChange={(e) => setGoal({ ...goal, month: goal.month.slice(0, 4) ? `${goal.month.slice(0, 4)}-${e.target.value}` : '' })} disabled={!goal.month.slice(0, 4)}>{Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map((m) => <option key={m} value={m}>{Number(m)}월</option>)}</select></label>
               <label>군<select value={goal.branch} onChange={(e) => setGoal({ ...goal, branch: e.target.value })}>{['육군', '해군', '공군', '해병대'].map((b) => <option key={b}>{b}</option>)}</select></label>
               <label>전역 뒤 여유<select value={goal.slack} onChange={(e) => setGoal({ ...goal, slack: Number(e.target.value) })}>{[0, 1, 2, 3].map((n) => <option key={n} value={n}>{n}개월</option>)}</select></label>
             </div>
@@ -107,7 +109,7 @@ export default function Plan() {
                   <p>{ym(goal.month)}에 돌아오려면 <b>{ym(latestNeeded)}</b>까지는 입영했어야 해요{latestNeeded < nextMonths(1)[0] ? '(이미 지났어요)' : '(18개월보다 먼 미래예요)'}.</p>
                   {earliestReturn && latestNeeded < nextMonths(1)[0] && <p>지금 바로 지원해 다음 달({ym(nextMonths(1)[0])})에 입영하면 {goal.branch} 기준 가장 빠른 복귀는 <b>{ym(earliestReturn)}</b>이에요. 복귀 월을 그 뒤로 바꿔 보세요.</p>}
                 </div>)}
-            {!goal.month && <p className="muted small">예: 2028년 3월 복학이면 육군(18개월)은 2026년 7~8월 입영이 맞아요. 전역 뒤 한 달은 비워 두는 편이 좋아요.</p>}
+            {!goal.month && <p className="muted small">연도를 고르는 순간 결과가 아래에 나와요. 예: 2028년 9월 복학이면 육군(18개월)은 2026년 12월~2027년 2월 입영이 맞아요.</p>}
           </section>
           <h2 className="plan-step">2단계 · 입영월 고르기 <span className="muted small">(최대 3개 · 1단계를 넣으면 자동으로 골라져요)</span></h2>
           <p className="muted small">초록 점이 있는 달에는 지금 접수 중이거나 예정인 회차가 있어요.</p>
