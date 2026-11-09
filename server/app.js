@@ -53,9 +53,29 @@ app.get('/api/rounds', (req, res) => {
   send(res, { items });
 });
 
+// 입영월별 접수 상태(칩 표시용)와 입영 기준 접수 시기 통계. 플래너가 「왜 다 마감인지, 언제 열리는지」를 말할 수 있게 한다.
+function planOverview(snaps, now = Date.now()) {
+  const statusOf = (s) => { const a = q.scheduleTime(s.applyStart), b = q.scheduleTime(s.applyEnd, true); if (!Number.isFinite(b)) return 'unknown'; if (b < now) return 'closed'; if (Number.isFinite(a) && a > now) return 'upcoming'; return 'open'; };
+  const months = {};
+  const leads = [];
+  for (const s of snaps) {
+    if (!s.enlistMonth || s.enlistMonth === '*') continue;
+    const m = (months[s.enlistMonth] ??= { open: 0, upcoming: 0, closed: 0, applyMonths: new Set() });
+    m[statusOf(s)] = (m[statusOf(s)] || 0) + 1;
+    if (s.applyStart) { m.applyMonths.add(String(s.applyStart).slice(0, 7)); const [ey, em] = s.enlistMonth.split('-').map(Number); const [ay, am] = String(s.applyStart).slice(0, 7).split('-').map(Number); if (ey && ay) leads.push(ey * 12 + em - (ay * 12 + am)); }
+  }
+  leads.sort((a, b) => a - b);
+  const pct = (p) => leads.length ? leads[Math.min(leads.length - 1, Math.floor(p * (leads.length - 1)))] : null;
+  const unscheduled = [...new Map(snaps.filter((s) => (!s.enlistMonth || s.enlistMonth === '*') && statusOf(s) !== 'closed').map((s) => [`${s.branch}|${s.roundLabel}|${s.category}`, { branch: s.branch, round: s.roundLabel, category: s.category, status: statusOf(s), applyStart: s.applyStart, applyEnd: s.applyEnd }])).values()];
+  return { months: Object.fromEntries(Object.entries(months).map(([k, v]) => [k, { open: v.open, upcoming: v.upcoming, closed: v.closed, applyMonths: [...v.applyMonths].sort() }])),
+    lead: leads.length ? { p25: pct(0.25), median: pct(0.5), p75: pct(0.75), n: leads.length } : null, unscheduled };
+}
+app.get('/api/plan-overview', (req, res) => send(res, planOverview(repo.latestSnapshots())));
+
 app.get('/api/plan', (req, res) => {
   const months = list(req.query.months).slice(0, 3);
   const snaps = repo.latestSnapshots();
+  const overview = planOverview(snaps);
   const NEED = '병무청 공지 확인 필요';
   const items = months.map((month) => {
     const rows = snaps.filter((s) => s.enlistMonth === month);
@@ -81,9 +101,10 @@ app.get('/api/plan', (req, res) => {
         },
       })),
       specialties: rows.map((s) => ({ branch: s.branch, mosCode: s.mosCode, mosName: s.mosName, rate: s.rate, status: statusOf(s) })),
+      applyMonths: overview.months[month]?.applyMonths || [],
     };
   });
-  send(res, { items });
+  send(res, { items, lead: overview.lead, unscheduled: overview.unscheduled });
 });
 
 // /api/mos/search 는 /api/mos/:mosCode 보다 먼저 등록해야 한다.

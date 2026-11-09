@@ -22,6 +22,12 @@ export default function Plan() {
   const [fixed, setFixed] = useState('');
   const [goal, setGoal] = useState({ month: '', branch: '육군', slack: 1 });
   const terms = useApi('/api/service-terms');
+  const overview = useApi('/api/plan-overview', { interval: 60000 });
+  const monthInfo = (m) => overview.data?.months?.[m];
+  const ym = (m) => m.replace('-', '.');
+  const minusMonths = (m, k) => addMonths(m, -k);
+  // 지난 회차 기준 접수 시기: 입영 p75~p25개월 전 → 「YYYY.MM~YYYY.MM」
+  const expectedApply = (m) => { const l = overview.data?.lead || plan.data?.lead; return l ? `${ym(minusMonths(m, l.p75))}~${ym(minusMonths(m, l.p25))}` : null; };
   const plan = useApi(months.length ? `/api/plan?months=${months.join(',')}` : null);
   const rules = useApi(tab === 'katusa' ? '/api/rules' : null);
   const cal = useApi(tab === 'katusa' ? '/api/calendar' : null);
@@ -84,17 +90,28 @@ export default function Plan() {
               : <p className="muted">그 시점에 맞추려면 이미 입영했어야 하거나 18개월보다 먼 미래예요. 복귀 월이나 군을 바꿔 보세요.</p>)}
             {!goal.month && <p className="muted small">예: 2028년 3월 복학이면 육군(18개월)은 2026년 7~8월 입영이 맞아요. 전역 뒤 한 달은 비워 두는 편이 좋아요.</p>}
           </section>
-          <div className="chips">
-            {nextMonths(12).map((m) => (
-              <button key={m} aria-pressed={months.includes(m)} className={`chip ${months.includes(m) ? 'on' : ''}`} onClick={() => toggle(m)}>{m.replace('-', '.')}</button>
-            ))}
+          <div className="chips month-chips">
+            {nextMonths(12).map((m) => { const i = monthInfo(m); const live = i ? i.open + i.upcoming : 0; return (
+              <button key={m} aria-pressed={months.includes(m)} className={`chip ${months.includes(m) ? 'on' : ''}${live ? ' has-live' : ''}`} onClick={() => toggle(m)} title={i ? `접수 중 ${i.open} · 예정 ${i.upcoming} · 마감 ${i.closed}` : '아직 회차 없음'}>{ym(m)}{live ? <span className="chip-dot" aria-label={`접수 중·예정 ${live}건`} /> : null}</button>
+            ); })}
           </div>
+          {overview.data && (() => {
+            const liveMonths = Object.entries(overview.data.months || {}).filter(([, v]) => v.open + v.upcoming > 0).map(([m]) => m).sort();
+            const un = overview.data.unscheduled || [];
+            return <p className="muted small plan-now">
+              {liveMonths.length ? <>지금 접수 중·예정 회차가 있는 입영월: <b>{liveMonths.map(ym).join(', ')}</b> (점이 찍힌 달).</> : <>지금은 입영월이 정해진 회차 중 접수 중·예정인 것이 없어요.</>}
+              {un.length > 0 && <> 입영월 미정으로 접수 중·예정: {un.map((r) => `${r.branch} ${r.category} ${r.round}회차`).join(', ')} → <Link to="/now">지금 접수</Link></>}
+            </p>;
+          })()}
           {plan.loading && <p className="muted">불러오는 중이에요…</p>}
           {(plan.data?.items || []).map((it) => (
             <section key={it.month} className="card">
               <h2>{it.month.replace('-', '년 ')}월 입영</h2>
-              {!it.rounds.length && <p className="muted">이 입영월로 잡힌 모집 회차가 아직 없어요</p>}
-              {it.rounds.length > 0 && !it.rounds.some((r) => r.status === 'open' || r.status === 'upcoming') && <p className="warn">이 입영월의 회차는 모두 접수가 끝났어요. 다른 달을 고르거나 <Link to="/now">지금 접수 중인 회차</Link>를 확인하세요.</p>}
+              {!it.rounds.length && <p className="muted">이 입영월로 잡힌 모집 회차가 아직 병무청 자료에 없어요.{expectedApply(it.month) && <> 지난 회차들을 보면 접수는 보통 입영 {(overview.data?.lead || plan.data?.lead)?.median}개월 전에 열렸으니, <b>{expectedApply(it.month)}</b> 사이에 공고를 확인해 보세요.</>}</p>}
+              {it.rounds.length > 0 && !it.rounds.some((r) => r.status === 'open' || r.status === 'upcoming') && <div className="warn">
+                <p>이 입영월 회차의 접수는 <b>{(it.applyMonths || []).map(ym).join(', ') || '이전'}</b>에 있었고 모두 끝났어요. 아래 기록은 다음에 비슷한 회차가 열릴 때 참고용이에요.</p>
+                <p className="small">접수 중인 회차는 <Link to="/now">지금 접수</Link>에서, 다음 접수 일정은 <Link to="/calendar">모집 일정</Link>에서 볼 수 있어요. 입영월이 미정인 회차(동반입대병 등)는 이 표에 들어가지 않아요.</p>
+              </div>}
               {it.rounds.slice(0, 8).map((r) => (
                 <div key={`${r.branch}-${r.round}`} className={`tl tl-${r.status}`}>
                   <b>{r.branch} {r.category ? `${r.category} ` : ''}{r.round}회차 <span className={`badge ${STATUS[r.status][1]}`}>{STATUS[r.status][0]}</span></b>
