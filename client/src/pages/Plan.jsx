@@ -20,7 +20,9 @@ export default function Plan() {
   const [tab, setTab] = useState('plan');
   const [months, setMonths] = useState([]);
   const [fixed, setFixed] = useState('');
-  const [goal, setGoal] = useState({ month: '', branch: '육군', slack: 1 });
+  // basis: 'return'(복귀 희망 월: 복학·복직, 전역 뒤 여유 포함) | 'discharge'(전역 희망 월: 여유 없음)
+  const [goal, setGoal] = useState({ month: '', branch: '육군', slack: 1, basis: 'return' });
+  const gap = () => (goal.basis === 'discharge' ? 0 : Number(goal.slack || 0));
   // 입영월을 정하는 두 방법: 돌아올 달(복학·복직)로 계산하거나, 입영월을 직접 고르거나. 둘은 뜻이 달라 한 화면에 나란히 두지 않는다.
   const [mode, setMode] = useState('goal');
   const terms = useApi('/api/service-terms');
@@ -40,7 +42,7 @@ export default function Plan() {
   const termOf = (branch) => (terms.data?.items || []).find((t) => t.branch === branch && /현역/.test(t.type || ''))?.months || null;
   const suggested = (() => {
     if (!goal.month || !termOf(goal.branch)) return [];
-    const latest = addMonths(goal.month, -termOf(goal.branch) - Number(goal.slack || 0));
+    const latest = addMonths(goal.month, -termOf(goal.branch) - gap());
     return [addMonths(latest, -2), addMonths(latest, -1), latest].filter((m) => nextMonths(18).includes(m));
   })();
   const applySuggested = () => setMonths(suggested.slice(-3).sort());
@@ -48,8 +50,12 @@ export default function Plan() {
   const suggestedKey = suggested.join(',');
   useEffect(() => { if (suggestedKey) setMonths(suggestedKey.split(',').slice(-3).sort()); }, [suggestedKey]);
   // 과거 시점을 넣었을 때: 지금 지원하면 가장 빠른 복귀가 언제인지 알려 준다(다음 달 입영 기준).
-  const latestNeeded = goal.month && termOf(goal.branch) ? addMonths(goal.month, -termOf(goal.branch) - Number(goal.slack || 0)) : null;
-  const earliestReturn = termOf(goal.branch) ? addMonths(nextMonths(1)[0], termOf(goal.branch) + Number(goal.slack || 0)) : null;
+  const latestNeeded = goal.month && termOf(goal.branch) ? addMonths(goal.month, -termOf(goal.branch) - gap()) : null;
+  const earliestReturn = termOf(goal.branch) ? addMonths(nextMonths(1)[0], termOf(goal.branch) + gap()) : null;
+  const basisName = goal.basis === 'discharge' ? '전역 희망 월' : '복귀 희망 월';
+  // 결과 설명용: 가장 늦은 입영월 기준 전역·복귀 시점
+  const lastPick = suggested.length ? suggested[suggested.length - 1] : null;
+  const dischargeOf = (m) => addMonths(m, termOf(goal.branch));
   const toggle = (m) => setMonths(months.includes(m) ? months.filter((x) => x !== m) : months.length < 3 ? [...months, m].sort() : months);
 
   // 월별 특기 비교표: 특기명 × 월 → 지원률
@@ -91,30 +97,35 @@ export default function Plan() {
           </ol>
           <p className="lead">입영월을 정하는 방법은 두 가지예요. 하나만 쓰면 돼요.</p>
           <div className="tabs mode-tabs" role="group" aria-label="입영월 정하는 방법">
-            <button aria-pressed={mode === 'goal'} className={mode === 'goal' ? 'on' : ''} onClick={() => setMode('goal')}>복귀 희망 월로 계산하기</button>
+            <button aria-pressed={mode === 'goal'} className={mode === 'goal' ? 'on' : ''} onClick={() => setMode('goal')}>복귀·전역 희망 월로 계산하기</button>
             <button aria-pressed={mode === 'manual'} className={mode === 'manual' ? 'on' : ''} onClick={() => { setMode('manual'); setGoal({ ...goal, month: '' }); }}>입영월 직접 고르기</button>
           </div>
           {mode === 'goal' && <section className="card goal-box">
-            <h2>복귀 희망 월(복학·복직)로 계산하기</h2>
-            <p className="small">「복귀 희망 월」은 복학·복직처럼 사회로 돌아오고 싶은 달이에요. 여기서 복무기간과 여유를 빼면 「입영월」(군대에 들어가는 달)이 나와요.</p>
+            <h2>{basisName}로 계산하기</h2>
+            <div className="tabs basis-tabs" role="group" aria-label="계산 기준">
+              <button type="button" aria-pressed={goal.basis === 'return'} className={goal.basis === 'return' ? 'on' : ''} onClick={() => setGoal({ ...goal, basis: 'return' })}>복귀 희망 월 (복학·복직)</button>
+              <button type="button" aria-pressed={goal.basis === 'discharge'} className={goal.basis === 'discharge' ? 'on' : ''} onClick={() => setGoal({ ...goal, basis: 'discharge' })}>전역 희망 월</button>
+            </div>
+            <p className="small">{goal.basis === 'discharge' ? '「전역 희망 월」은 군 복무가 끝나는 달이에요. 여기서 복무기간을 빼면 「입영월」이 나와요.' : '「복귀 희망 월」은 복학·복직처럼 사회로 돌아오고 싶은 달이에요. 여기서 복무기간과 전역 뒤 여유를 빼면 「입영월」이 나와요.'}</p>
             <p className="small">복학이나 복직하고 싶은 달을 고르면, 복무기간을 빼서 입영해야 하는 달을 계산해요. 예: 2028년 9월 복학 → 2026년 12월~2027년 2월 입영.</p>
             <div className="row">
               {/* 달력 입력(type=month)은 브라우저에 따라 글자칸으로 바뀌어 형식이 어긋나므로, 어디서나 같은 연도·월 선택 상자를 쓴다 */}
-              <label>복귀 희망 연도<select value={goal.month.slice(0, 4)} onChange={(e) => setGoal({ ...goal, month: e.target.value ? `${e.target.value}-${goal.month.slice(5, 7) || '03'}` : '' })}><option value="">선택</option>{Array.from({ length: 4 }, (_, i) => String(new Date().getFullYear() + i)).map((y) => <option key={y} value={y}>{y}년</option>)}</select></label>
-              <label>복귀 희망 월<select value={goal.month.slice(5, 7)} onChange={(e) => setGoal({ ...goal, month: goal.month.slice(0, 4) ? `${goal.month.slice(0, 4)}-${e.target.value}` : '' })} disabled={!goal.month.slice(0, 4)}>{Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map((m) => <option key={m} value={m}>{Number(m)}월</option>)}</select></label>
+              <label>{basisName.slice(0, 5)} 연도<select value={goal.month.slice(0, 4)} onChange={(e) => setGoal({ ...goal, month: e.target.value ? `${e.target.value}-${goal.month.slice(5, 7) || '03'}` : '' })}><option value="">선택</option>{Array.from({ length: 4 }, (_, i) => String(new Date().getFullYear() + i)).map((y) => <option key={y} value={y}>{y}년</option>)}</select></label>
+              <label>{basisName}<select value={goal.month.slice(5, 7)} onChange={(e) => setGoal({ ...goal, month: goal.month.slice(0, 4) ? `${goal.month.slice(0, 4)}-${e.target.value}` : '' })} disabled={!goal.month.slice(0, 4)}>{Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map((m) => <option key={m} value={m}>{Number(m)}월</option>)}</select></label>
               <label>군<select value={goal.branch} onChange={(e) => setGoal({ ...goal, branch: e.target.value })}>{['육군', '해군', '공군', '해병대'].map((b) => <option key={b}>{b}</option>)}</select></label>
-              <label>전역 뒤 여유<select value={goal.slack} onChange={(e) => setGoal({ ...goal, slack: Number(e.target.value) })}>{[0, 1, 2, 3].map((n) => <option key={n} value={n}>{n}개월</option>)}</select></label>
+              {goal.basis === 'return' && <label>전역 뒤 여유<select value={goal.slack} onChange={(e) => setGoal({ ...goal, slack: Number(e.target.value) })}>{[0, 1, 2, 3].map((n) => <option key={n} value={n}>{n}개월</option>)}</select></label>}
             </div>
             {goal.month && termOf(goal.branch) && (suggested.length
               ? <div className="goal-result" role="status">
-                  <p className="goal-result-title">결과 · {ym(goal.month)} 복귀에 맞는 입영월</p>
+                  <p className="goal-result-title">결과 · {ym(goal.month)} {goal.basis === 'discharge' ? '전역' : '복귀'}에 맞는 입영월</p>
                   <p className="goal-result-main"><b>{suggested.map(ym).join(' · ')}</b></p>
-                  <p className="small">{goal.branch} 복무 {termOf(goal.branch)}개월 + 전역 뒤 여유 {goal.slack}개월을 뺀 달이에요. 아래에 이 달들의 회차가 바로 나와요. 다른 달도 보려면 달 칩에서 바꿔 고르세요.</p>
+                  <p className="goal-timeline">{lastPick && <>예: <b>{ym(lastPick)}</b> 입영 → {goal.branch} {termOf(goal.branch)}개월 복무 → <b>{ym(dischargeOf(lastPick))}</b> 전역{goal.basis === 'return' && <> → 여유 {goal.slack}개월 → <b>{ym(goal.month)}</b> 복귀</>}</>}</p>
+                  <p className="small">아래에 이 달들의 회차가 바로 나와요. 다른 달도 보려면 달 칩에서 바꿔 고르세요. 전역일은 입영일에 복무기간을 더한 참고값이에요.</p>
                 </div>
               : <div className="goal-result warn" role="status">
                   <p className="goal-result-title">결과 · 이 시점에는 맞출 수 없어요</p>
-                  <p>{ym(goal.month)}에 돌아오려면 <b>{ym(latestNeeded)}</b>까지는 입영했어야 해요{latestNeeded < nextMonths(1)[0] ? '(이미 지났어요)' : '(18개월보다 먼 미래예요)'}.</p>
-                  {earliestReturn && latestNeeded < nextMonths(1)[0] && <p>지금 바로 지원해 다음 달({ym(nextMonths(1)[0])})에 입영하면 {goal.branch} 기준 가장 빠른 복귀는 <b>{ym(earliestReturn)}</b>이에요. 복귀 월을 그 뒤로 바꿔 보세요.</p>}
+                  <p>{ym(goal.month)}에 {goal.basis === 'discharge' ? '전역하려면' : '돌아오려면'} <b>{ym(latestNeeded)}</b>까지는 입영했어야 해요{latestNeeded < nextMonths(1)[0] ? '(이미 지났어요)' : '(18개월보다 먼 미래예요)'}.</p>
+                  {earliestReturn && latestNeeded < nextMonths(1)[0] && <p>지금 바로 지원해 다음 달({ym(nextMonths(1)[0])})에 입영하면 {goal.branch} 기준 가장 빠른 {goal.basis === 'discharge' ? '전역' : '복귀'}은 <b>{ym(earliestReturn)}</b>이에요. {basisName}을 그 뒤로 바꿔 보세요.</p>}
                 </div>)}
             {!goal.month && <p className="muted small">연도를 고르는 순간 결과가 아래에 나와요. 예: 2028년 9월 복학이면 육군(18개월)은 2026년 12월~2027년 2월 입영이 맞아요.</p>}
           </section>}

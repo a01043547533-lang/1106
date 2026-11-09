@@ -440,6 +440,9 @@ details.result-group[open] > summary { margin-bottom: 12px; }
 .goal-box { background: var(--blue-soft); border-color: #cfdcea; }
 .plan-step { margin: 26px 0 8px; font-size: 19px; }
 .mode-tabs { margin: 0 0 16px; }
+.basis-tabs { margin: 0 0 10px; }
+.basis-tabs button { min-height: 40px; font-size: 14px; }
+.goal-timeline { margin: 4px 0 8px; font-size: 15px; line-height: 1.7; }
 .mode-tabs button { border: 1.5px solid var(--line-2); }
 .mode-tabs button.on { border-color: var(--maroon); }
 .plan-step .muted.small { font-weight: 500; }
