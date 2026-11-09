@@ -7,6 +7,7 @@ const prod = process.argv.includes('--prod');
 if (prod) {
   const { default: express } = await import('express');
   app.use(express.static(path.join(ROOT_DIR, 'dist/client')));
+  app.all('/_vercel/*', (req, res) => res.sendStatus(404)); // Vercel 전용 경로(통계 스크립트 등)는 로컬에 없다
   app.get(/^\/(?!api\/).*/, (req, res) => res.sendFile(path.join(ROOT_DIR, 'dist/client/index.html')));
 } else {
   const { createServer } = await import('vite');

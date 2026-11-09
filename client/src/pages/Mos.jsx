@@ -2,21 +2,32 @@ import { PageHeading } from '../design.jsx';
 import { useRef } from 'react';
 import { useReveal } from '../motion.jsx';
 // 특기 목록 + 특기 상세 — 검색 유입의 주력
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { MosSearch } from '../mos-search.jsx';
 import { useRouteData } from '../data.jsx';
 import { describeMos } from '../lib/describe.js';
-import { AdSlot, OfficialApplyGuide, RateBar, Status, SubscribeForm, addMonths, fmtRate, monthLabel, n } from '../components.jsx';
+import { CompareToggle } from './Compare.jsx';
+import { enlistLabel, sourceLabel, sumJobfit } from './Jobfit.jsx';
+import { AddToCalendar, Forecast, OfficialApplyGuide, RateBar, Status, addMonths, fmtRate, monthLabel, n } from '../components.jsx';
+import { ExamTimeline } from '../exam-timeline.jsx';
 
 export function MosIndex() {
   const idx = useRouteData('mosIndex', '/api/mos', (r) => r.items);
+  const navigate = useNavigate();
   const groups = {};
   for (const m of idx.value || []) (groups[m.branch || '기타'] ||= []).push(m);
+  const names = Object.keys(groups);
   return (
     <>
       <PageHeading title="모집병 특기 전체 목록" description="특기를 누르면 신체조건, 지원 자격·면허·전공, 회차별 경쟁률을 볼 수 있어요." />
+      <section className="card mos-index-tools">
+        <MosSearch onPick={(m) => navigate(`/mos/${encodeURIComponent(m.mosCode)}`)} label="특기 이름·코드로 바로 찾기" />
+        {names.length > 1 && <p className="jump small">바로가기: {names.map((b) => <a key={b} href={`#branch-${b}`}>{b} ({groups[b].length})</a>)}</p>}
+        <p className="muted small">내 신체조건·자격으로 거르려면 <Link to="/find">특기 찾기</Link>, 후보를 나란히 보려면 <Link to="/compare">비교함</Link>을 쓰세요.</p>
+      </section>
       <Status state={idx} empty={idx.value && !idx.value.length ? '특기 정보를 모으는 중이에요' : null} />
       {Object.entries(groups).map(([branch, list]) => (
-        <section key={branch} className="card">
+        <section key={branch} className="card" id={`branch-${branch}`}>
           <h2>{branch} 모집병 특기 <span className="muted">({list.length})</span></h2>
           <ul className="cols">
             {list.map((m) => <li key={`${m.mosCode}-${m.category}`}><Link to={`/mos/${encodeURIComponent(m.mosCode)}`}>{m.mosName}</Link>{m.category && <span className="muted small"> · {m.category}</span>}</li>)}
@@ -71,7 +82,9 @@ export function MosDetail() {
   const rates = [...d.finalRates].sort((a, b) => String(a.roundLabel).localeCompare(String(b.roundLabel), 'ko', { numeric: true })).slice(-12);
   const months = d.serviceTerm?.months;
   const discharge = months && s?.enlistMonth && s.enlistMonth !== '*' ? addMonths(s.enlistMonth, months) : null;
-  const interview = m.interview === 'Y' ? '이 특기는 면접을 봐요' : m.interview === 'N' ? '면접은 없어요(2025년 12월 30일 접수부터 폐지)' : '-';
+  const none = <span className="muted">공개 기준 없음 · 공고 확인</span>;
+  const v = (x) => (x === null || x === undefined || x === '' ? none : x);
+  const interview = m.interview === 'Y' ? '이 특기는 면접을 봐요' : m.interview === 'N' ? '면접은 없어요(2025년 12월 30일 접수부터 폐지)' : none;
 
   return (
     <article>
@@ -79,6 +92,7 @@ export function MosDetail() {
       <PageHeading title={`${d.mosName} 경쟁률·지원자격`} eyebrow="특기 자세히 보기" />
       <p className="muted">{[d.branch, d.category].filter(Boolean).join(' · ')} 모집병</p>
       {paragraphs.map((p) => <p key={p} className="lead">{p}</p>)}
+      <p className="mos-tools"><CompareToggle code={d.mosCode} /> <Link className="cal-ics" to={`/calc?mos=${encodeURIComponent(d.mosCode)}`}>예상 배점 계산하기</Link></p>
 
       <OfficialApplyGuide specialty={d} snapshot={s} />
 
@@ -89,30 +103,47 @@ export function MosDetail() {
             <tr><th>회차</th><td>{s.roundLabel ?? '-'}</td></tr>
             <tr><th>입영</th><td>{monthLabel(s.enlistMonth)}{s.unit ? ` · ${s.unit}` : ''}</td></tr>
             <tr><th>모집 / 접수</th><td>{s.quota ?? '-'}명 / {s.applicants ?? '-'}명</td></tr>
-            <tr><th>지원률</th><td><RateBar rate={s.rate} /></td></tr>
+            <tr><th>지원률</th><td><RateBar rate={s.rate} /><div><Forecast f={d.forecast} /></div></td></tr>
             <tr><th>접수기간</th><td>{s.applyStart ?? '-'} ~ {s.applyEnd ?? '-'}</td></tr>
           </tbody></table>
-        ) : <p className="muted">지금 접수 중인 회차가 없어요</p>}
+        ) : <p className="muted">{d.jobfit?.length ? '모집병 접수현황에는 지금 이 특기의 접수 회차가 없어요. 취업맞춤특기병 입영일별 현황은 아래에서 확인하세요.' : '지금 접수 중인 회차가 없어요'}</p>}
+        {s?.applyEnd && <p className="cal-row"><AddToCalendar event={{ uid: `close-${d.branch}-${d.mosCode}-${s.roundLabel}`, title: `${d.branch} ${d.mosName} 접수 마감`, start: String(s.applyEnd).slice(0, 10), description: `${s.roundLabel ? s.roundLabel + '회차 · ' : ''}접수기간 ${s.applyStart || '?'} ~ ${s.applyEnd} · 지원은 병무청에서`, url: window.location.href }} /> <span className="muted small">마감 하루 전에 알림이 울려요.</span></p>}
         {months && <p>복무기간 <b>{months}개월</b> ({d.serviceTerm.type})</p>}
         {discharge && <p>입영월에 복무기간을 더하면 <b>{monthLabel(s.enlistMonth)} 입영 → {monthLabel(discharge)} 종료 예상</b>이에요. 정확한 전역일은 공식 안내를 확인하세요.</p>}
         {d.serviceTerm?.note && <p className="muted small">{d.serviceTerm.note}</p>}
       </section>
 
+      {d.jobfit?.length > 0 && (() => {
+        const upcoming = d.jobfit.filter((r) => !r.past);
+        const t = sumJobfit(upcoming);
+        return <section className="card">
+          <h2>입영일별 모집·선발 현황</h2>
+          {upcoming.length ? <>
+            <p>다가오는 입영일 {upcoming.length}개에 모집 {t.quota}명, 선발 {t.selected}명으로 {t.vacancy > 0 ? <b className="jobfit-vacancy">남은 자리 {t.vacancy}명</b> : <b>남은 자리가 없어요</b>}{t.vacancy > 0 ? '이에요' : ''}.</p>
+            <div className="table-wrap"><table className="doc-table">
+              <thead><tr><th>입영일</th><th>입영부대</th><th className="num">모집</th><th className="num">선발</th><th className="num">남은 자리</th></tr></thead>
+              <tbody>{upcoming.map((r) => <tr key={r.enlistDate + r.unit}><td>{enlistLabel(r.enlistDate)}</td><td>{r.unit}</td><td className="num">{r.quota}명</td><td className="num">{r.selected}명</td><td className="num">{r.vacancy > 0 ? <b className="jobfit-vacancy">{r.vacancy}명</b> : <span className="badge gray">마감</span>}</td></tr>)}</tbody>
+            </table></div>
+          </> : <p className="muted">공개된 다가오는 입영일이 없어요.</p>}
+          <p className="muted small">남은 자리 = 모집 − 선발 · 출처: 병무청 맞춤형 특기병 정보 · {sourceLabel(d.jobfitSource, d.jobfitFetchedAt)}. 지원 가능한 입영일과 기술훈련 요건은 모집 공고에서 확인하세요. <Link to="/jobfit">전체 특기 입영일 보기 →</Link> · <Link to="/guide/jobfit">제도 안내</Link></p>
+        </section>;
+      })()}
       <section className="card">
         <h2>지원 자격 · 신체조건</h2>
         <table><tbody>
-          <tr><th>신장</th><td>{m.height ?? '-'}</td></tr>
-          <tr><th>체중</th><td>{m.weight ?? '-'}</td></tr>
-          <tr><th>시력</th><td>{m.vision ?? '-'}</td></tr>
-          <tr><th>신체등급</th><td>{m.minGrade ? `${m.minGrade}급 이내` : '-'}</td></tr>
-          <tr><th>색각</th><td>{m.colorVision ?? '-'}</td></tr>
-          <tr><th>학력</th><td>{m.education ?? '-'}</td></tr>
+          <tr><th>신장</th><td>{v(m.height)}</td></tr>
+          <tr><th>체중</th><td>{v(m.weight)}</td></tr>
+          <tr><th>시력</th><td>{v(m.vision)}</td></tr>
+          <tr><th>신체등급</th><td>{m.minGrade ? `${m.minGrade}급 이내` : none}</td></tr>
+          <tr><th>색각</th><td>{v(m.colorVision)}</td></tr>
+          <tr><th>학력</th><td>{v(m.education)}</td></tr>
           <tr><th>면접</th><td>{interview}</td></tr>
         </tbody></table>
         <h3>자격·면허·전공</h3>
+        {s?.applyEnd && d.eligibility.length > 0 && <ExamTimeline deadline={s.applyEnd} compact />}
         {d.eligibility.length ? (
           <ul className="cols">{d.eligibility.slice(0, 80).map((e, i) => { const x = n(e); return <li key={`${x.item}-${i}`}>{x.item} <span className="muted small">{[x.kind, x.level?.trim(), x.relation].filter(Boolean).join('·')}</span></li>; })}</ul>
-        ) : <p className="muted">자격 정보를 모으는 중이에요</p>}
+        ) : <p className="muted">이 특기에 연결된 자격·면허·전공 데이터가 없어요. 자격 제한이 없는 모집분야이거나 공고에만 적힌 경우이니 모집공고를 확인하세요.</p>}
       </section>
 
       {d.documents.length > 0 && (
@@ -130,18 +161,19 @@ export function MosDetail() {
       </section>
 
       <section className="card">
-        <h2>이 특기 알림 받기</h2>
-        <p className="muted small">접수 시작·마감, 마감 직전 미달 소식을 이메일로 알려 줘요.</p>
-        <SubscribeForm mosCode={d.mosCode} />
+        <h2>함께 읽으면 좋은 안내</h2>
+        <ul>
+          <li><Link to="/guide/rate-reading">지원률 읽는 법 · 미달이면 합격인가요?</Link></li>
+          <li><Link to="/guide/score-basics">자격·면허·전공 배점은 어떻게 반영되나요?</Link></li>
+          <li><Link to="/guide/recruit-flow">모집병 지원 절차 한눈에 보기</Link></li>
+        </ul>
       </section>
-
       {d.links.length > 0 && (
         <section className="card">
           <h2>관련 글</h2>
           <ul>{d.links.slice(0, 2).map((l) => <li key={l.url}><a href={l.url}>{l.title}</a></li>)}</ul>
         </section>
       )}
-      <AdSlot size="300x250" />
     </article>
   );
 }

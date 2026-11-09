@@ -1,0 +1,40 @@
+# 접수현황을 30분마다 받아 history/에 쌓고(마감 예측 재료), 하루 한 번 예측표를 다시 만들어 배포한다.
+# 필요한 설정: 저장소 Settings → Secrets → Actions 에 MMA_API_KEY 등록.
+# Vercel 쪽: 30분마다 생기는 데이터 커밋으로 매번 배포되지 않게 Settings → Git → Ignored Build Step 에
+#   bash -c 'git log -1 --pretty=%s | grep -q "^chore(data): snapshots" && exit 0 || exit 1'
+# 를 넣는다. 하루 한 번의 "chore(data): forecast" 커밋만 배포된다.
+name: collect-snapshots
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # 30분마다 수집
+    - cron: '0 21 * * *'     # 매일 06:00 KST: 예측표 재생성 + 배포
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: { group: collect, cancel-in-progress: false }
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci --omit=dev
+      - name: 접수현황 수집
+        env: { MMA_API_KEY: ${{ secrets.MMA_API_KEY }} }
+        run: node scripts/collect-snapshots.mjs
+      - name: 예측표 재생성 (하루 한 번)
+        if: github.event.schedule == '0 21 * * *' || github.event_name == 'workflow_dispatch'
+        run: node scripts/build-forecast.mjs
+      - name: 커밋
+        run: |
+          git config user.name "snapshot-bot"
+          git config user.email "snapshot-bot@users.noreply.github.com"
+          git add server/data/history server/data/forecast.json
+          if git diff --cached --quiet; then echo "변경 없음"; exit 0; fi
+          if [ "${{ github.event.schedule }}" = "0 21 * * *" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            git commit -m "chore(data): forecast $(date -u +%F)"
+          else
+            git commit -m "chore(data): snapshots $(date -u +%FT%H:%M)"
+          fi
+          git push

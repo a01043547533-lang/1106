@@ -35,5 +35,15 @@ export function describeMos(data) {
   if (m.interview === 'Y' || m.interview === 'N') body.push(`${name}의 면접 실시 여부는 수집된 기준에서 '${m.interview === 'Y' ? '실시' : '미실시'}'로 표시돼요.`);
   if (m.yearRound === 'Y') body.push(`${name}의 모집 방식은 데이터에 연간모집으로 표시돼요.`);
   if (m.applyStart && m.applyEnd) body.push(`${name} 기준표의 접수기간은 ${m.applyStart}부터 ${m.applyEnd}까지예요.`);
-  return [body.join(' '), rateLine(data)].filter(Boolean);
+  return [body.join(' '), rateLine(data), jobfitLine(data)].filter(Boolean);
+}
+
+// 취업맞춤특기병: 다가오는 입영일의 모집·선발·남은 자리 합계를 문장으로 쓴다.
+export function jobfitLine(data) {
+  const rows = (data?.jobfit || []).filter((r) => !r.past);
+  if (!rows.length) return null;
+  const sum = (k) => rows.reduce((t, r) => t + (Number(r[k]) || 0), 0);
+  const first = rows[0].enlistDate, last = rows[rows.length - 1].enlistDate;
+  const span = first === last ? `${first} 입영` : `${first}부터 ${last}까지 입영일 ${rows.length}개`;
+  return `${data.mosName}은(는) 취업맞춤특기병 특기로, ${span}에 모집 ${sum('quota')}명 중 ${sum('selected')}명이 선발돼 남은 자리는 ${sum('vacancy')}명이에요.`;
 }

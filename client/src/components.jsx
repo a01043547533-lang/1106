@@ -3,6 +3,8 @@ import { CountNumber } from './motion.jsx';
 import { useEffect, useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MMA_APPLY_URL, MMA_PLANS_URL, MMA_PORTAL_URL } from './lib/official.js';
+import { downloadIcs, googleCalendarUrl } from './lib/ics.js';
+import { LIVE_EVENT, getJson, peekJson } from './lib/fetch-cache.js';
 
 export const n = (it) => it?._norm || it || {};
 export const fmtRate = (r) => (r === null || r === undefined ? '-' : Number(r).toFixed(2));
@@ -11,22 +13,25 @@ export const formatKst = (value) => value && Number.isFinite(Date.parse(value))
 export const monthLabel = (m) => (!m || m === '*' ? '입영월 미정' : m.replace('-', '년 ') + '월');
 
 // 클라이언트에서만 부르는 API (SSR 데이터가 없는 화면용)
+// 같은 주소의 동시 요청은 하나로 합치고 잠깐 재사용한다(lib/fetch-cache.js). 주기 갱신은 새로 받는다.
 export function useApi(url, { interval = 0 } = {}) {
-  const [state, setState] = useState({ data: null, error: null, loading: Boolean(url), at: null });
+  const [state, setState] = useState(() => { const cached = peekJson(url); return { data: cached ?? null, error: null, loading: Boolean(url) && cached === undefined, at: cached === undefined ? null : new Date() }; });
   useEffect(() => {
     if (!url) { setState({ data: null, error: null, loading: false, at: null }); return undefined; }
     let alive = true;
-    const load = () => {
+    const load = (force) => {
       if (typeof document !== 'undefined' && document.hidden) return; // 탭이 가려져 있으면 갱신을 멈춘다
-      fetch(url)
-        .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      getJson(url, { force })
         .then((data) => alive && setState({ data, error: null, loading: false, at: new Date() }))
         .catch((error) => alive && setState((s) => ({ ...s, error, loading: false })));
     };
-    setState((s) => ({ ...s, loading: true }));
-    load();
-    const id = interval ? setInterval(load, interval) : null;
-    return () => { alive = false; if (id) clearInterval(id); };
+    const cached = peekJson(url);
+    setState((s) => (cached === undefined ? { ...s, loading: true } : { data: cached, error: null, loading: false, at: s.at || new Date() }));
+    if (cached === undefined) load(false);
+    const id = interval ? setInterval(() => load(true), interval) : null;
+    const onLive = () => { if (!peekJson(url)) load(true); };
+    window.addEventListener(LIVE_EVENT, onLive);
+    return () => { alive = false; if (id) clearInterval(id); window.removeEventListener(LIVE_EVENT, onLive); };
   }, [url, interval]);
   return state;
 }
@@ -38,58 +43,41 @@ export function Status({ state, empty }) {
   return null;
 }
 
-// 광고 심사 통과 후 실제 스크립트/광고 단위를 교체할 위치: AdSlot 한 곳.
-const DEMO_ADS = [
-  { id: 'prepare', brand: 'FIRST PACK', title: '첫날의 짐을 가볍게.', copy: '입대 준비물 키트', action: '광고 예시 보기', to: '/ads' },
-  { id: 'plan', brand: 'ZERO HOUR', title: '새로운 일상, 같은 페이스.', copy: '데일리 디지털 워치', action: '광고 예시 보기', to: '/ads' },
-  { id: 'find', brand: 'NEXT CLASS', title: '자격증 공부, 한 강씩.', copy: '온라인 자격증 클래스', action: '인강 광고 예시 보기', to: '/ads' },
-];
-function AdArtwork({ kind }) {
-  return <svg viewBox="0 0 240 170" className="ad-art" aria-hidden="true" focusable="false">
-    <ellipse cx="122" cy="151" rx="76" ry="9" fill="#000" opacity=".14" />
-    {kind === 'prepare' ? <g>
-      <rect x="46" y="59" width="140" height="89" rx="14" fill="#b7bd9a" stroke="#555e42" strokeWidth="2" />
-      <path d="M87 59V45q29-18 58 0v14" fill="none" stroke="#555e42" strokeWidth="9" />
-      <path d="M48 82h136" stroke="#f8f3df" strokeWidth="3" />
-      <rect x="60" y="98" width="56" height="31" rx="3" fill="#f4eed9" />
-      <path d="M70 109h34m-34 9h22" stroke="#66704f" strokeWidth="3" />
-      <rect x="159" y="79" width="39" height="71" rx="8" fill="#f7f4e8" stroke="#c5c4b4" />
-      <rect x="168" y="69" width="21" height="13" rx="3" fill="#263c30" />
-      <path d="M171 104h15m-15 7h15" stroke="#7e9479" strokeWidth="3" />
-    </g> : kind === 'plan' ? <g transform="rotate(16 120 85)">
-      <rect x="91" y="3" width="58" height="163" rx="17" fill="#2e3436" />
-      <path d="M100 16h40m-40 10h40m-40 119h40m-40 10h40" stroke="#171d1f" strokeWidth="4" />
-      <rect x="76" y="42" width="88" height="86" rx="23" fill="#181f22" stroke="#4e595c" strokeWidth="3" />
-      <rect x="86" y="58" width="68" height="48" rx="8" fill="#b9c8b1" />
-      <path d="M97 71h13v9H97v10h13m11-19h13v19h-13Zm-6 7v2m0 5v2m24-16h6m-6 19h6" fill="none" stroke="#283a31" strokeWidth="3" />
-      <circle cx="109" cy="116" r="3" fill="#687772" /><circle cx="131" cy="116" r="3" fill="#687772" />
-    </g> : <g>
-      <rect x="44" y="25" width="150" height="108" rx="8" fill="#25313d" stroke="#8fabc1" strokeWidth="3" />
-      <rect x="52" y="33" width="134" height="91" rx="3" fill="#fff5d8" />
-      <rect x="62" y="45" width="64" height="67" rx="5" fill="#f5bc4c" />
-      <circle cx="94" cy="78" r="19" fill="#233f77" /><path d="m89 68 15 10-15 10Z" fill="#fff5d8" />
-      <path d="M136 53h39m-39 12h32m-32 12h39m-39 12h22" stroke="#9da78b" strokeWidth="4" />
-      <path d="M44 133h150l19 15H25Z" fill="#b8c7d0" /><path d="M95 133h47l-4 5h-39Z" fill="#6c8496" />
-    </g>}
-  </svg>;
+// 마감 카운트다운 (홈·마감 임박 보드 공용)
+export function Countdown({ to }) {
+  const [now, setNow] = useState(null);
+  useEffect(() => { setNow(Date.now()); const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
+  const end = new Date(to.length === 10 ? `${to}T23:59:59+09:00` : to).getTime();
+  if (now === null) return <span>{to.slice(0, 10)} 마감</span>; // 서버 렌더에서는 날짜만
+  const left = Math.max(0, end - now);
+  const d = Math.floor(left / 86400000); const h = Math.floor((left % 86400000) / 3600000);
+  const m = Math.floor((left % 3600000) / 60000); const s = Math.floor((left % 60000) / 1000);
+  return <span className={left > 0 && left < 86400000 ? 'urgent countdown' : 'countdown'}>{d}일 {h}시간 {m}분 {s}초</span>;
 }
-export function AdSlot({ size = '320x100' }) {
-  const [w, h] = size.split('x').map(Number);
-  return <section className="ad-gallery" aria-label="가상 광고 예시 3개">
-    {DEMO_ADS.map(ad => <aside key={ad.id} className={`ad-slot demo-ad ad-${ad.id}${h >= 250 ? ' demo-ad-tall' : ''}`} style={{ maxWidth: w, minHeight: h }} aria-label={`${ad.brand} 가상 광고`}>
-      <div className="ad-topline"><span className="ad-brand">{ad.brand}</span><span className="demo-ad-label">가상 광고</span></div>
-      <Link to={ad.to} className="ad-creative">
-        <div className="ad-copy"><span>{ad.copy}</span><strong>{ad.title}</strong></div>
-        <AdArtwork kind={ad.id} />
-        <span className="ad-bottom"><span className="ad-disclaimer">가상 브랜드 · 판매하지 않음</span><span className="ad-cta">{ad.action} <span aria-hidden="true">↗</span></span></span>
-      </Link>
-    </aside>)}
-  </section>;
+
+// 캘린더에 추가: .ics 내려받기 + Google 캘린더 링크. 서버 호출·개인정보 없음.
+export function AddToCalendar({ event, events, filename = '입대타이밍-일정', compact = false, label }) {
+  const list = events || (event ? [event] : []);
+  if (!list.length) return null;
+  const single = list.length === 1 ? list[0] : null;
+  return <span className={`cal-add${compact ? ' compact' : ''}`}>
+    <button type="button" className="cal-ics" onClick={() => downloadIcs(filename, list)} aria-label={`${label || (single ? single.title : '일정 ' + list.length + '개')} 캘린더 파일 내려받기`}>{label || (compact ? '캘린더 저장' : single ? '내 캘린더에 추가' : `일정 ${list.length}개 한 번에 캘린더에 추가`)}</button>
+    {single && <a className="cal-google" href={googleCalendarUrl(single)} target="_blank" rel="noopener noreferrer">Google 캘린더 ↗</a>}
+  </span>;
+}
+
+// 마감 예상 지원률. 표본이 모일 때까지는 상태 문구만 보여 준다(없는 숫자를 만들지 않는다).
+export function Forecast({ f, compact = false }) {
+  if (!f) return null;
+  if (f.status === 'ok') return <span className="forecast ok" title={`마감 ${f.hours}시간 전 기준 · 비슷한 ${f.basis === 'category' ? '모집구분' : f.basis === 'branch' ? '군' : '전체'} 회차 ${f.n}건의 변화 비율`}>마감 예상 <b>{fmtRate(f.expected)}</b>{!compact && <span className="muted small"> (범위 {fmtRate(f.low)}~{fmtRate(f.high)} · 표본 {f.n}건)</span>}</span>;
+  if (f.status === 'too-early') return compact ? null : <span className="forecast muted small">마감 3일 전부터 예상치를 보여 줘요</span>;
+  if (f.status === 'collecting') return compact ? <span className="forecast muted small">예측 기록 수집 중</span> : <span className="forecast muted small">마감 예상은 기록 수집 중이에요 · 마감 회차 {f.closedRounds ?? 0}개 모임 (표본 8건부터 표시)</span>;
+  return null;
 }
 
 export function CertificateResources() {
   return <section className="doc-section certificate-helper" aria-labelledby="certificate-title">
-    <div className="certificate-intro"><h2 id="certificate-title">자격증 준비 도우미</h2><p>필요한 시험과 접수 일정은 공식 사이트에서 확인하세요. <Link to="/score">내 자격의 배점 확인 →</Link></p></div>
+    <div className="certificate-intro"><h2 id="certificate-title">자격증 준비 도우미</h2><p>필요한 시험과 접수 일정은 공식 사이트에서 확인하세요. <Link to="/calc">내 자격의 예상 배점 계산 →</Link></p></div>
     <div className="certificate-links">
       <a href="https://www.q-net.or.kr/" target="_blank" rel="noopener noreferrer"><span><strong>Q-Net</strong><small>국가자격 종목 · 시험 일정 · 응시 안내</small></span><span aria-hidden="true">↗</span></a>
       <a href="https://license.korcham.net/" target="_blank" rel="noopener noreferrer"><span><strong>대한상공회의소 자격평가사업단</strong><small>컴퓨터활용능력 · 워드프로세서 등</small></span><span aria-hidden="true">↗</span></a>
@@ -172,18 +160,22 @@ export function MultiPicker({ value, onChange, placeholder = '자격증·면허�
   const inputId = useId();
   const [q, setQ] = useState('');
   const [limit, setLimit] = useState(20);
-  const list = all.data?.items || [];
+  const [kind, setKind] = useState('');
+  const meta = all.data?.meta || [];
+  const kinds = [...new Set(meta.map((m) => m.kind))];
+  const list = (kind ? meta.filter((m) => m.kind === kind) : meta).map((m) => m.item);
   const hits = q.trim() ? list.filter(x => x.includes(q.trim())) : list;
   const toggle = name => onChange(value.includes(name) ? value.filter(x => x !== name) : [...value, name]);
   return <div className="picker">
-    <p className="picker-help">목록에서 선택하거나 이름으로 검색하세요. 여러 개 선택할 수 있어요.</p>
+    <p className="picker-help">이름으로 검색하거나 목록에서 고르세요. 종류를 고르면 그 안에서 지원할 수 있는 특기가 많은 순으로 보여 줘요. 여러 개 고를 수 있어요.</p>
     <label htmlFor={inputId}>자격·면허·전공 검색</label>
     <input id={inputId} value={q} onChange={e => { setQ(e.target.value); setLimit(20); }} placeholder={all.loading ? '목록을 불러오는 중…' : placeholder} disabled={all.loading} />
+    {kinds.length > 1 && <div className="chips picker-kinds" role="group" aria-label="종류">{['', ...kinds].map((k) => <button type="button" key={k || 'all'} className={`chip${kind === k ? ' on' : ''}`} aria-pressed={kind === k} onClick={() => { setKind(k); setLimit(20); }}>{k || '전체'}</button>)}</div>}
     {value.length > 0 && <div className="picker-selected"><span className="small">선택한 항목 {value.length}개</span><div className="chips">
       {value.map(v => <button type="button" key={v} className="chip on" aria-label={v + ' 선택 해제'} onClick={() => toggle(v)}>{v} <span aria-hidden="true">×</span></button>)}
     </div></div>}
     {all.loading ? <p className="feedback loading" role="status">선택 목록을 불러오는 중이에요…</p> : all.error ? <p className="feedback error" role="alert">목록을 불러오지 못했어요. 잠시 후 페이지를 새로고침해 주세요.</p> : !list.length ? <p className="feedback empty" role="status">선택 가능한 자격 정보를 준비 중이에요.</p> : <>
-      <fieldset className="picker-options"><legend>{q.trim() ? '검색 결과' : '선택 가능한 항목'} · {hits.length.toLocaleString()}개</legend>
+      <fieldset className="picker-options"><legend>{q.trim() ? '검색 결과' : `${kind || '자격·면허·전공'} · 지원 가능한 특기가 많은 순`} · {hits.length.toLocaleString()}개</legend>
         {hits.length ? <div className="picker-option-grid">{hits.slice(0, limit).map(name => <label key={name} className={value.includes(name) ? 'selected' : ''}>
           <input type="checkbox" checked={value.includes(name)} onChange={() => toggle(name)} /><span>{name}</span>
         </label>)}</div> : <p className="muted" role="status">일치하는 항목이 없어요. 다른 이름으로 검색해 주세요.</p>}
@@ -191,11 +183,6 @@ export function MultiPicker({ value, onChange, placeholder = '자격증·면허�
       {hits.length > limit && <button type="button" className="picker-more" onClick={() => setLimit(n => n + 20)}>항목 더 보기 ({Math.min(limit, hits.length)} / {hits.length.toLocaleString()})</button>}
     </>}
   </div>;
-}
-
-// 알림 신청 폼
-export function SubscribeForm() {
-  return <div className="subscription-unavailable"><p>과제 배포에서는 이메일 알림을 제공하지 않아요. 이메일 주소는 수집하지 않습니다.</p><Link to="/calendar">모집 일정 확인하기 →</Link><p className="muted small"><Link to="/privacy">개인정보처리방침</Link></p></div>;
 }
 
 export function dday(date) {

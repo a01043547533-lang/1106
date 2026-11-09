@@ -4,7 +4,7 @@ import express from 'express';
 import * as repo from './repo/index.js';
 import * as q from './queries.js';
 import { TRUST_PROXY, SERVERLESS } from './config.js';
-import { refreshStatus } from './live.js';
+import { refreshJobfit, refreshStatus } from './live.js';
 import { requestLimit } from './rate-limit.js';
 
 
@@ -16,8 +16,17 @@ app.use('/api', requestLimit());
 app.use(express.json({ limit: '50kb' }));
 app.use('/api', async (req, res, next) => {
   if (!SERVERLESS) return next();
-  if (['/subscribe', '/verify', '/unsubscribe'].includes(req.path)) return res.status(503).json({ error: '과제 배포에서는 이메일 알림을 제공하지 않습니다. 일정 화면을 확인해 주세요.' });
-  if (['/now', '/stats', '/calendar', '/rounds', '/plan', '/health', '/mos', '/mos/search'].includes(req.path) || req.path.startsWith('/mos/')) await refreshStatus();
+  if (['/subscribe', '/verify', '/unsubscribe'].includes(req.path)) return res.status(503).json({ error: '이메일 알림은 제공하지 않습니다. 모집 일정 화면을 확인해 주세요.' });
+  // 이미 받아 둔 실시간 자료가 있으면 기다리지 않고 바로 응답하고 갱신은 뒤에서 한다.
+  // 서버가 막 켜져 실시간 자료가 없을 때만 첫 조회를 기다린다(그래야 첫 화면부터 최신 값).
+  // 첫 요청도 기다리지 않는다. 저장된 최근 기록으로 바로 답하고(화면은 「갱신 중」 표시), 실시간 값은 다음 요청부터 나간다.
+  // Vercel은 응답 뒤 함수를 재울 수 있어 갱신이 다음 방문으로 밀릴 수 있지만, 빈 화면 2~3초보다 낫다.
+  const refresh = (fn) => { fn().catch(() => {}); };
+  if (['/now', '/stats', '/calendar', '/rounds', '/plan', '/health', '/mos', '/mos/search', '/forecast', '/ping'].includes(req.path) || req.path.startsWith('/mos/')) refresh(refreshStatus);
+  // 맞춤형 특기병 정보는 그 화면과 해당 특기 상세에서만 새로 받는다(다른 화면은 기다리지 않게).
+  let code = '';
+  try { code = req.path.startsWith('/mos/') && req.path !== '/mos/search' ? decodeURIComponent(req.path.slice(5)) : ''; } catch { code = ''; }
+  if (req.path === '/jobfit' || (code && q.isJobfitCode(code))) refresh(refreshJobfit);
   next();
 });
 const startedAt = Date.now();
@@ -51,11 +60,18 @@ app.get('/api/plan', (req, res) => {
   const items = months.map((month) => {
     const rows = snaps.filter((s) => s.enlistMonth === month);
     const rounds = [...new Map(rows.map((s) => [`${s.branch}|${s.roundLabel}`, s])).values()];
+    // 접수 상태: open(접수 중) → upcoming(예정) → closed(마감) 순으로 보여 준다. 마감은 지원할 수 없으니 뒤로.
+    const now = Date.now();
+    const statusOf = (s) => { const a = q.scheduleTime(s.applyStart), b = q.scheduleTime(s.applyEnd, true); if (!Number.isFinite(b)) return 'unknown'; if (b < now) return 'closed'; if (Number.isFinite(a) && a > now) return 'upcoming'; return 'open'; };
+    const order = { open: 0, upcoming: 1, unknown: 2, closed: 3 };
+    rounds.sort((x, y) => order[statusOf(x)] - order[statusOf(y)] || String(x.applyStart).localeCompare(String(y.applyStart)));
     return {
       month,
       rounds: rounds.map((s) => ({
         branch: s.branch,
         round: s.roundLabel,
+        category: s.category,
+        status: statusOf(s),
         schedule: {
           applyStart: s.applyStart || NEED,
           applyEnd: s.applyEnd || NEED,
@@ -64,7 +80,7 @@ app.get('/api/plan', (req, res) => {
           enlist: s.enlistMonth || NEED,
         },
       })),
-      specialties: rows.map((s) => ({ branch: s.branch, mosCode: s.mosCode, mosName: s.mosName, rate: s.rate })),
+      specialties: rows.map((s) => ({ branch: s.branch, mosCode: s.mosCode, mosName: s.mosName, rate: s.rate, status: statusOf(s) })),
     };
   });
   send(res, { items });
@@ -81,7 +97,7 @@ app.get('/api/mos/search', (req, res) => {
   const branch = req.query.branch || null;
 
   const mos = repo.getDataset('mos').items;
-  const elig = repo.getDataset('eligible').items;
+  const eligByMos = repo.getEligibleByMos();
   const latest = repo.latestSnapshots();
 
   const results = mos
@@ -95,7 +111,7 @@ app.get('/api/mos/search', (req, res) => {
       if (vision) { if (n.visionMin == null) unknown.push('시력'); else if (vision < n.visionMin) reasons.push(`시력 기준 미달(교정 ${n.visionMin} 이상)`); }
       if (grade) { if (n.gradeMax == null) unknown.push('신체등급'); else if (grade > n.gradeMax) reasons.push(`신체등급 기준 미달(${n.gradeMax}급 이내)`); }
 
-      const need = elig.filter((e) => norm(e).mosCode === n.mosCode).map((e) => norm(e).item).filter(Boolean);
+      const need = (eligByMos.get(n.mosCode) || []).map((e) => norm(e).item).filter(Boolean);
       const anyItemOk = !need.length || need.some((x) => items.has(x));
       const missing = !anyItemOk ? need.slice(0, 3) : [];
       const snap = latest.find((s) => s.mosCode === n.mosCode && s.branch === n.branch);
@@ -171,9 +187,21 @@ app.get('/api/eligible', (req, res) => {
   send(res, { items: [...map.values()] });
 });
 
+// 자격·면허·전공 목록. 가나다순이면 「무술단증」이 맨 위라 쓸모가 없어, 지원 가능한 특기 수가 많은 순으로 준다(같으면 가나다).
+const eligibleItemsCache = new WeakMap();
 app.get('/api/eligible-items', (req, res) => {
-  const set = new Set(repo.getDataset('eligible').items.map((e) => norm(e).item).filter(Boolean));
-  send(res, { items: [...set].sort((a, b) => a.localeCompare(b, 'ko')) });
+  const ds = repo.getDataset('eligible');
+  let items = eligibleItemsCache.get(ds);
+  if (!items) {
+    const count = new Map();
+    const kindOf = new Map();
+    for (const e of ds.items) { const n = norm(e); if (!n.item) continue; let set = count.get(n.item); if (!set) { count.set(n.item, (set = new Set())); kindOf.set(n.item, n.kind || '기타'); } set.add(n.mosCode); }
+    // 자격증·면허를 찾는 사람이 많으니 자격 → 면허 → 전공 순으로, 같은 종류 안에서는 특기 수가 많은 순.
+    const kindOrder = { 자격: 0, 면허: 1, 전공: 2 };
+    items = [...count.entries()].sort((a, b) => (kindOrder[kindOf.get(a[0])] ?? 9) - (kindOrder[kindOf.get(b[0])] ?? 9) || b[1].size - a[1].size || a[0].localeCompare(b[0], 'ko')).map(([item]) => ({ item, kind: kindOf.get(item), specialties: count.get(item).size }));
+    eligibleItemsCache.set(ds, items);
+  }
+  send(res, { items: items.map((x) => x.item), meta: items, order: 'kind,specialties' });
 });
 
 app.get('/api/calendar', (req, res) => send(res, q.calendarList({ from: req.query.from || undefined, to: req.query.to || undefined })));
@@ -192,6 +220,22 @@ app.get('/api/social-orgs', (req, res) => {
   if (type) rows = rows.filter((o) => o.orgType === type);
   if (qq) rows = rows.filter((o) => `${o.orgName} ${o.parentOrg} ${o.address}`.includes(qq));
   send(res, { total: rows.length, items: rows.slice(0, 100), regions, types });
+});
+
+app.get('/api/jobfit', (req, res) => send(res, q.jobfitList()));
+
+// 마감 예측: 접수 중인 행마다 예상 마감 지원률. 표본이 없으면 status로 알린다.
+app.get('/api/forecast', (req, res) => {
+  const now = Date.now();
+  const items = q.nowList({}).items.map((r) => ({ branch: r.branch, mosCode: r.mosCode, roundLabel: r.roundLabel, unit: r.unit, enlistMonth: r.enlistMonth, rate: r.rate, forecast: q.forecastFor(r, now) }));
+  send(res, { summary: q.forecastSummary(), items });
+});
+app.get('/api/exam-schedule', (req, res) => send(res, q.examsBefore(req.query.deadline || null)));
+// 외부 감시용. 접수현황 수집이 연속 3회 이상 실패했거나 6시간 넘게 성공이 없으면 503을 돌려준다(UptimeRobot 등이 알림).
+app.get('/api/ping', (req, res) => {
+  const st = repo.collectStatus();
+  const bad = st.consecutiveFailures >= 3 || (st.stale && st.liveAvailable);
+  res.status(bad ? 503 : 200).json({ ok: !bad, consecutiveFailures: st.consecutiveFailures, lastCollectedAt: st.lastCollectedAt, liveAvailable: st.liveAvailable });
 });
 
 app.get('/api/service-terms', (req, res) => send(res, { items: repo.getServiceTerms() }));

@@ -2,18 +2,9 @@ import { CountNumber, useClientData, useScrollReveal } from '../motion.jsx';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useRouteData } from '../data.jsx';
-import { AdSlot, CertificateResources, BranchBadge, OfficialApplyLink, RateBar, Status, monthLabel, useApi } from '../components.jsx';
-
-function Countdown({ to }) {
-  const [now, setNow] = useState(null);
-  useEffect(() => { setNow(Date.now()); const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
-  const end = new Date(to.length === 10 ? `${to}T23:59:59+09:00` : to).getTime();
-  if (now === null) return <span>{to.slice(0, 10)} 마감</span>; // 서버 렌더에서는 날짜만
-  const left = Math.max(0, end - now);
-  const d = Math.floor(left / 86400000); const h = Math.floor((left % 86400000) / 3600000);
-  const m = Math.floor((left % 3600000) / 60000); const s = Math.floor((left % 60000) / 1000);
-  return <span className={left > 0 && left < 86400000 ? 'urgent countdown' : 'countdown'}>{d}일 {h}시간 {m}분 {s}초</span>;
-}
+import { CertificateResources, BranchBadge, Countdown, OfficialApplyLink, RateBar, Status, monthLabel, useApi } from '../components.jsx';
+import { closingItems } from './Closing.jsx';
+import { GUIDES } from '../lib/guide-list.js';
 
 export default function Home() {
   const countStats = useClientData('stats');
@@ -33,7 +24,26 @@ export default function Home() {
     open.push(s);
   }
 
-  const top = rounds.data?.items.slice(0, 5) || now.value;
+  const openRows = rounds.data?.items || now.value || [];
+  const top = openRows.slice(0, 5);
+  // 지원률 높은 5개: 지원자가 몰리는 인기 특기. 접수 중인 특기가 적으면 두 목록이 겹친다.
+  const hot = [...openRows].filter((s) => s.rate != null).sort((a, b) => b.rate - a.rate).slice(0, 5);
+  const fewOpen = openRows.length > 0 && openRows.length < 10;
+  const RankTable = ({ rows, label }) => <div className="table-wrap" data-reveal><table className="doc-table rank-table" aria-label={label}>
+    <thead><tr><th className="num">순위</th><th>특기</th><th className="num">뽑는 인원</th><th className="num">지원한 인원</th><th>지원률</th></tr></thead>
+    <tbody>
+      {rows.map((s, i) => (
+        <tr key={`${s.branch}-${s.mosCode}-${s.unit}-${s.enlistMonth}`}>
+          <td className="num">{i + 1}</td>
+          <td><Link className="topcard" to={`/mos/${encodeURIComponent(s.mosCode)}`}>{s.mosName}</Link><div className="muted small">{[s.branch, s.unit, monthLabel(s.enlistMonth)].filter(Boolean).join(' · ')}</div></td>
+          <td className="num">{s.quota}명</td>
+          <td className="num">{s.applicants}명</td>
+          <td><RateBar rate={s.rate} countUp={countTop} /></td>
+        </tr>
+      ))}
+    </tbody>
+  </table></div>;
+  const closing = closingItems(rounds.data?.items, 48, true);
   const root = useRef(null);
   useScrollReveal(root);
 
@@ -72,6 +82,7 @@ export default function Home() {
                   ))}
                 </tbody>
               </table></div>}
+              {rounds.data && <p className="closing-callout">{closing.length ? <Link to="/closing">마감 48시간 이내 미달 특기 {closing.length}개 보기 →</Link> : <Link to="/closing">마감 임박 미달 특기 보드 →</Link>}</p>}
               <dl className="meta-table" aria-label="데이터 출처와 현황">
                 <div><dt>데이터 출처</dt><dd>병무청 공공데이터</dd></div>
                 {stats.value && <div><dt>추적 중인 특기</dt><dd><CountNumber value={stats.value.specialtiesTracked} animate={countStats} />개</dd></div>}
@@ -85,22 +96,13 @@ export default function Home() {
 
       <section className="band band-cream" aria-labelledby="low-rate">
         <div className="band-inner">
-          <div className="band-heading" data-reveal><h2 id="low-rate">지원률 낮은 특기 5개</h2><p>현재 접수 중인 특기를 지원률이 낮은 순서로 모았어요.</p></div>
+          <div className="band-heading" data-reveal><h2 id="low-rate">지금 접수 중인 특기, 지원률 양 끝 5개씩</h2><p>왼쪽은 아직 지원자가 적어 노려볼 만한 특기, 오른쪽은 지원자가 몰리는 인기 특기예요.</p></div>
           <Status state={now} empty={now.value && !now.value.length ? '접수 중인 특기가 아직 없어요' : null} />
-          {top?.length > 0 && <div className="table-wrap" data-reveal><table className="doc-table rank-table">
-            <thead><tr><th className="num">순위</th><th>특기</th><th className="num">뽑는 인원</th><th className="num">지원한 인원</th><th>지원률</th></tr></thead>
-            <tbody>
-              {top.map((s, i) => (
-                <tr key={`${s.branch}-${s.mosCode}-${s.unit}-${s.enlistMonth}`}>
-                  <td className="num">{i + 1}</td>
-                  <td><Link className="topcard" to={`/mos/${encodeURIComponent(s.mosCode)}`}>{s.mosName}</Link><div className="muted small">{[s.branch, s.unit, monthLabel(s.enlistMonth)].filter(Boolean).join(' · ')}</div></td>
-                  <td className="num">{s.quota}명</td>
-                  <td className="num">{s.applicants}명</td>
-                  <td><RateBar rate={s.rate} countUp={countTop} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table></div>}
+          {top.length > 0 && <div className="rank-pair">
+            <section aria-labelledby="rank-low"><h3 id="rank-low"><span className="badge green">미달</span> 지원률 낮은 5개</h3><RankTable rows={top} label="지원률 낮은 특기 5개" /></section>
+            <section aria-labelledby="rank-high"><h3 id="rank-high"><span className="badge red">붐빔</span> 지원률 높은 5개</h3><RankTable rows={hot} label="지원률 높은 특기 5개" /></section>
+          </div>}
+          {fewOpen && <p className="muted small" data-reveal>지금 접수 중인 특기가 {openRows.length}개뿐이라 두 목록에 같은 특기가 들어갈 수 있어요. 회차가 열리면 목록이 달라져요.</p>}
           <aside className="note" data-reveal aria-labelledby="rate-help-title">
             <p className="note-title" id="rate-help-title">지원률 읽는 법</p>
             <p>지원률은 접수 인원 ÷ 모집 인원이에요. <strong>1.0 미만</strong>(미달)이면 뽑는 인원보다 지원한 사람이 적다는 뜻이에요. 접수 중에는 달라질 수 있고, 최종 합격을 뜻하거나 보장하지는 않아요.</p>
@@ -124,6 +126,16 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="band band-cream" aria-labelledby="guide-title">
+        <div className="band-inner">
+          <div className="band-heading" data-reveal><h2 id="guide-title">처음이라면 가이드부터</h2><p>지원 절차, 지원률 읽는 법, 배점 구조처럼 헷갈리기 쉬운 제도를 글로 풀었어요.</p></div>
+          <ul className="guide-grid" data-reveal>
+            {GUIDES.slice(0, 4).map((g) => <li key={g.slug}><Link to={`/guide/${g.slug}`}><strong>{g.title}</strong><span>{g.summary}</span></Link></li>)}
+          </ul>
+          <p className="panel-link" data-reveal><Link to="/guide">가이드 전체 보기 →</Link> · <Link to="/compare">특기 비교함</Link> · <Link to="/calc">예상 배점 계산기</Link></p>
+        </div>
+      </section>
+
       <div className="band band-maroon"><div className="band-inner" data-reveal><CertificateResources /></div></div>
 
       <section className="band band-peach closing" aria-labelledby="apply-title">
@@ -140,7 +152,6 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="band band-cream"><div className="band-inner"><AdSlot size="320x100" /></div></div>
     </div>
   );
 }

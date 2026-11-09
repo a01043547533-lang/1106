@@ -5,11 +5,39 @@
     <link rel="preload" href="/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>입대타이밍 · 모집 일정과 지원률</title>
-    <meta name="description" content="병무청 공공데이터로 모집 일정, 지원률, 특기 지원 조건을 확인하세요." />
+    <title>입대타이밍 · 모집병 지원률과 모집 일정</title>
+    <meta name="description" content="병무청 공공데이터로 모집병 접수현황, 지원률, 특기별 지원 조건, 모집 일정을 확인하세요. 입영월 플래너와 입대 가이드도 제공해요." />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="입대타이밍" />
+    <meta property="og:title" content="입대타이밍 · 모집병 지원률과 모집 일정" />
+    <meta property="og:description" content="병무청 공공데이터로 모집병 접수현황, 지원률, 특기별 지원 조건, 모집 일정을 확인하세요." />
+    <meta property="og:image" content="/preparation-mate.png" />
+    <meta property="og:locale" content="ko_KR" />
+    <meta name="twitter:card" content="summary" />
+    <!--seo-head-->
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- React가 그리기 전 또는 스크립트를 실행하지 않는 방문자에게 보이는 기본 내용. React가 올라오면 교체된다. -->
+      <header style="padding:16px 24px;border-bottom:1px solid #ddd"><a href="/" style="font-weight:700;text-decoration:none;color:inherit">입대타이밍</a></header>
+      <main style="max-width:760px;margin:0 auto;padding:32px 24px;line-height:1.7">
+        <h1>입대타이밍 · 모집병 지원률과 모집 일정</h1>
+        <p>입대타이밍은 병무청이 공개한 공공데이터로 모집병 접수현황과 지원률, 특기별 신체조건·지원 자격, 모집 일정을 한곳에서 보여 주는 민간 정보 사이트예요. 병무청과는 관계가 없으며, 지원과 본인인증은 병무청 누리집에서 해요.</p>
+        <ul>
+          <li><a href="/now">지금 접수 중인 모집병 실시간 지원률</a></li>
+          <li><a href="/closing">마감 임박 미달 특기</a></li>
+          <li><a href="/find">내 조건으로 갈 수 있는 군 특기 찾기</a></li>
+          <li><a href="/mos">모집병 특기 전체 목록</a></li>
+          <li><a href="/calendar">모집병·사회복무요원·카투사 접수 일정</a></li>
+          <li><a href="/jobfit">취업맞춤특기병 입영일별 남은 자리</a></li>
+          <li><a href="/plan">입영월 플래너</a> · <a href="/compare">특기 비교함</a> · <a href="/calc">예상 배점 계산기</a></li>
+          <li><a href="/guide">입대 가이드 · 지원 절차, 지원률 읽는 법, 배점 구조</a></li>
+          <li><a href="/about">사이트 소개</a> · <a href="/privacy">개인정보처리방침</a> · <a href="/terms">이용약관</a></li>
+        </ul>
+        <noscript><p>이 사이트의 표와 검색은 JavaScript가 필요해요. 브라우저에서 JavaScript를 켜 주세요.</p></noscript>
+      </main>
+    </div>
     <script type="module" src="/src/entry-client.jsx"></script>
   </body>
 </html>

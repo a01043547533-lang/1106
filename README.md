@@ -1,6 +1,6 @@
 # 입대타이밍
 
-React와 병무청 공공데이터 API를 활용한 과제용 웹앱입니다. React 화면은 Vercel에서 정적으로 제공하고, 서버 함수가 API 인증키를 숨긴 채 병무청 접수현황을 조회합니다.
+React와 병무청 공공데이터 API를 활용한 모집병 정보 사이트입니다. 데이터 화면(접수현황·특기·일정)과 함께 `/guide` 아래에 제도 설명 글, `/about`·`/contact`·`/privacy`·`/terms` 필수 페이지를 제공합니다. React 화면은 Vercel에서 정적으로 제공하고, 서버 함수가 API 인증키를 숨긴 채 병무청 접수현황을 조회합니다.
 
 ## 실행
 
@@ -30,11 +30,14 @@ npm test
 
 ## 프로젝트 구성
 
-- `client/src`: React 화면, 스타일, 공통 컴포넌트
+- `client/src`: React 화면, 스타일, 공통 컴포넌트 (`pages/Guide.jsx`: 제도 설명 글, `lib/guide-list.js`: 글 목록·sitemap 공용)
+- `scripts/postbuild-seo.mjs`: robots.txt·sitemap.xml 생성
 - `client/public`: 이미지와 파비콘
 - `api/index.js`: Vercel API 진입점
 - `server/app.js`: 화면에서 사용하는 조회 API
-- `server/live.js`: 병무청 실시간 조회, 30초 메모리 캐시, 동시 요청 병합
+- `server/live.js`: 병무청 실시간 조회(접수현황 30초, 맞춤형 특기병 10분 메모리 캐시), 동시 요청 병합. 받아 둔 값이 있으면 먼저 응답하고 갱신은 뒤에서 한다(서버가 막 켜졌을 때만 첫 조회를 기다림).
+- `server/rate-limit.js`: IP당 분당 요청 한도(기본 120, `RATE_LIMIT_PER_MIN`). Vercel에서는 `x-real-ip`/`x-vercel-forwarded-for`로 방문자를 구분한다.
+- `client/src/lib/fetch-cache.js`: 화면의 같은 API 요청을 합치고 잠깐 재사용(기준자료 5분, 그 밖 30초)
 - `server/repo`: 공개 자료 읽기와 CSV 변환 도구
 - `server/data/prepared`: 압축한 특기·자격·배점·복무기관 기준자료
 - `server/data/*.json`, `snapshots.jsonl`: 일정·규칙·복무기간·기존 공개 기록
@@ -48,8 +51,31 @@ npm test
 
 일반 선발배점 주소는 `https://apis.data.go.kr/1300000//bjGiJun/list/bjGiJun/list`입니다. 기관의 실제 요청주소에 이중 슬래시가 필요합니다.
 
-## 과제에서 제공하지 않는 기능
+## 지원자용 기능
 
-이메일 구독과 자동 메일 발송, SSR, 영속 파일 수집, 주간 백업은 제거했습니다. 이메일 입력은 받지 않습니다. 가상 광고는 예시 표시이며 외부 광고 추적 스크립트는 없습니다. 함수의 캐시·조회 기록·요청 제한은 메모리에만 보관되어 함수 재시작 시 초기화되고 여러 인스턴스 간 공유되지 않습니다.
+- `/closing` 마감 임박 미달 보드: 접수 중인 특기 중 마감이 24시간·48시간·7일 이내이고 지원률 1.0 미만인 것만 모아 30초마다 갱신합니다. 홈 상단 창에 48시간 기준 개수를 함께 표시합니다.
+- `/jobfit` 취업맞춤특기병 입영일별 남은 자리: 병무청 「맞춤형 특기병 정보」 API를 서버가 10분 캐시로 조회하고(실패 시 `server/data/prepared/jobfit.json.gz` 저장본), 입영일별 모집·선발·남은 자리(모집 − 선발)를 보여 줍니다. 특기 상세에도 같은 표가 붙고, 특기 목록에 없던 맞춤특기병 특기도 상세 페이지가 열립니다.
+- `/calc` 예상 배점 계산기: 병무청 선발배점기준(일반·전문특기병)을 구분별 선택지로 바꿔 합계를 계산하고, 보유 자격을 고르면 특기별 지원가능 정보의 인정 등급·관련 구분으로 자동 선택합니다. 추첨 분야는 안내만 표시합니다.
+- `/compare` 특기 비교함: 최대 3개 특기의 복무기간·신체조건·지원률 흐름을 나란히 봅니다. 담은 목록은 브라우저 localStorage에만 저장합니다. 특기 상세의 「비교함에 담기」와 연동됩니다.
+- 캘린더에 추가: 모집 일정, 특기 상세의 접수 마감, 마감 임박 보드에서 `.ics` 파일 내려받기와 Google 캘린더 링크를 제공합니다(`client/src/lib/ics.js`). 브라우저에서만 만들고 서버 호출이나 개인정보 수집이 없습니다. 종일 일정은 하루 전, 시각이 있는 일정은 3시간 전 알림이 들어갑니다.
+
+## 마감 예측 · 자격 시험 일정 · 감시
+
+- **마감 지원률 예측**: `scripts/collect-snapshots.mjs`가 접수현황을 `server/data/history/YYYY-MM.jsonl`에 쌓고, `scripts/build-forecast.mjs`(빌드 때 자동 실행)가 「마감 N시간 전 지원률 → 마감 지원률」 비율을 모집구분·군·전체 단위로 계산해 `server/data/forecast.json`을 만듭니다. 화면(마감 임박 보드, 특기 상세)은 표본이 8건 이상 모인 구간부터 예상치와 25~75% 범위를 보여 주고, 그 전에는 「기록 수집 중」으로 표시합니다. 수집은 `.github/workflows/collect-snapshots.yml`이 30분마다 하고 하루 한 번 예측표를 다시 만들어 커밋합니다(저장소 Secrets에 `MMA_API_KEY` 필요, Vercel Ignored Build Step 설정은 워크플로 주석 참고).
+- **자격 시험 일정**: `server/data/exam_schedule.json`(연도별 정기 시험 일정). 계산기와 특기 상세가 「이 접수 마감 전에 최종 발표가 나는 시험」을 보여 줍니다. 다음 해 시행계획이 큐넷에 공고되면(보통 12월) 같은 형식으로 바꿔 주세요. 현재 값은 민간 정리표를 큐넷 월간 일정과 대조한 것이라 화면에 출처를 그대로 표시합니다.
+- **외부 감시**: `/api/ping`은 접수현황 수집이 연속 3회 이상 실패했거나 6시간 넘게 성공이 없으면 503을 돌려줍니다. UptimeRobot 같은 무료 서비스에 5분 간격 HTTP 감시로 등록하면 장애 알림을 받습니다.
+- **접속 통계**: Vercel Analytics(쿠키 없음). Vercel 프로젝트에서 Analytics를 켜면 집계가 시작됩니다.
+
+## 검색 노출과 광고(AdSense)
+
+- 빌드 후 `scripts/postbuild-seo.mjs`가 `dist/client/robots.txt`와 `sitemap.xml`(정적 라우트 + 가이드 글 + 특기 상세 전부)을 만듭니다. 사이트 주소는 `SITE_URL`, 없으면 Vercel의 `VERCEL_PROJECT_PRODUCTION_URL`을 씁니다. 둘 다 없으면 sitemap은 만들지 않습니다.
+- 화면은 라우트마다 title·description·canonical·OG 태그를 갱신합니다(`client/src/design.jsx`). `/status`, `/contact`, 404는 noindex입니다.
+- 화면에는 광고 자리를 두지 않습니다. `VITE_ADSENSE_CLIENT=ca-pub-…`가 빌드 환경변수에 있으면 `client/vite.config.js`가 AdSense 스크립트만 `<head>`에 넣습니다(심사 코드 겸 자동 광고). 승인 뒤 자동 광고를 켜거나, 원하는 위치에 광고 단위를 직접 추가합니다.
+- 승인 절차: ① 도메인 연결 후 `SITE_URL`·`VITE_SITE_URL`·`CONTACT_EMAIL` 설정 → ② AdSense에서 사이트 추가, 발급받은 게시자 ID를 `VITE_ADSENSE_CLIENT`로 넣고 재배포(심사 코드 삽입) → ③ 승인 후 AdSense가 알려 주는 `ads.txt` 한 줄을 `client/public/ads.txt`로 추가하고, AdSense에서 자동 광고를 켜서 재배포.
+- 서치콘솔·네이버 소유 확인은 `GOOGLE_SITE_VERIFICATION`, `NAVER_SITE_VERIFICATION` 값을 넣으면 메타 태그로 들어갑니다.
+
+## 제공하지 않는 기능
+
+이메일 구독과 자동 메일 발송, SSR, 영속 파일 수집, 주간 백업은 제공하지 않습니다. 이메일 입력은 받지 않습니다. 함수의 캐시·조회 기록·요청 제한은 메모리에만 보관되어 함수 재시작 시 초기화되고 여러 인스턴스 간 공유되지 않습니다.
 
 [병무청 누리집](https://www.mma.go.kr) · [공공데이터포털](https://www.data.go.kr)

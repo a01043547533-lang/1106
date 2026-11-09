@@ -81,13 +81,19 @@ export function useScrollReveal(ref) {
     if (!root || !allowed() || typeof IntersectionObserver === 'undefined') return undefined;
     const targets = [...root.querySelectorAll('[data-reveal]')];
     const observer = new IntersectionObserver((entries) => {
-      entries.forEach(({ target, isIntersecting }) => {
-        if (!isIntersecting) return;
+      entries.forEach(({ target, isIntersecting, boundingClientRect }) => {
+        // 화면에 들어왔거나, 한 번에 멀리 건너뛰어 이미 위로 지나간 구역은 바로 보여 준다(숨은 채 남지 않게).
+        if (!isIntersecting && boundingClientRect.top >= 0) return;
         target.classList.add('revealed');
         observer.unobserve(target);
       });
     }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
     targets.forEach((el) => { el.classList.add('reveal-ready'); observer.observe(el); });
-    return () => { observer.disconnect(); targets.forEach((el) => el.classList.remove('reveal-ready', 'revealed')); };
+    // 관찰자는 교차가 바뀔 때만 알려 주므로, 한 번에 멀리 건너뛰면 지나친 구역이 남는다. 스크롤 때마다 위로 지나간 구역을 훑어 보여 준다.
+    let raf = 0;
+    const sweep = () => { raf = 0; targets.forEach((el) => { if (!el.classList.contains('revealed') && el.getBoundingClientRect().top < window.innerHeight) { el.classList.add('revealed'); observer.unobserve(el); } }); };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(sweep); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => { observer.disconnect(); window.removeEventListener('scroll', onScroll); if (raf) cancelAnimationFrame(raf); targets.forEach((el) => el.classList.remove('reveal-ready', 'revealed')); };
   }, [ref]);
 }

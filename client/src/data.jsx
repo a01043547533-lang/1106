@@ -1,6 +1,7 @@
 // React 화면에서 같은 출처의 서버 API를 조회한다. 병무청 인증키는 전달받지 않는다.
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { getJson } from './lib/fetch-cache.js';
 
 export const DataContext = createContext({ path: null, data: {}, meta: {} });
 
@@ -19,8 +20,7 @@ export function useRouteData(key, url, pick = (r) => r) {
     if (fromServer && state.value !== undefined) return undefined; // SSR 값 그대로
     let alive = true;
     setState((s) => ({ ...s, loading: true }));
-    fetch(url)
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+    getJson(url)
       .then((r) => alive && setState({ value: pick(r), error: null, loading: false }))
       .catch((error) => alive && setState({ value: undefined, error, loading: false }));
     return () => { alive = false; };

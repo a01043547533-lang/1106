@@ -1,29 +1,32 @@
 {
-    "name":  "ipdae-timing",
-    "version":  "0.1.0",
-    "private":  true,
-    "type":  "module",
-    "description":  "입대타이밍 — React와 병무청 API를 활용한 과제 웹앱",
-    "engines":  {
-                    "node":  "\u003e=20"
-                },
-    "scripts":  {
-                    "dev":  "node server/web.js",
-                    "build":  "vite build --config client/vite.config.js",
-                    "start":  "node server/web.js --prod",
-                    "test":  "node --test tests/vercel.test.mjs",
-                    "test:vercel":  "node --test tests/vercel.test.mjs",
-                    "import:service-terms":  "node server/repo/import-service-terms.js"
-                },
-    "dependencies":  {
-                         "express":  "^4.21.2",
-                         "fast-xml-parser":  "^4.5.1",
-                         "react":  "^18.3.1",
-                         "react-dom":  "^18.3.1",
-                         "react-router-dom":  "^6.28.0"
-                     },
-    "devDependencies":  {
-                            "@vitejs/plugin-react":  "^4.3.4",
-                            "vite":  "^5.4.11"
-                        }
+  "name": "ipdae-timing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "입대타이밍 — 병무청 공공데이터로 모집병 지원률·모집 일정·특기 조건을 보여주는 정보 사이트",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node server/web.js",
+    "build": "node scripts/build-forecast.mjs && vite build --config client/vite.config.js && node scripts/postbuild-seo.mjs",
+    "start": "node server/web.js --prod",
+    "test": "node --test tests/vercel.test.mjs",
+    "test:vercel": "node --test tests/vercel.test.mjs",
+    "import:service-terms": "node server/repo/import-service-terms.js",
+    "collect": "node scripts/collect-snapshots.mjs",
+    "forecast": "node scripts/build-forecast.mjs"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1",
+    "express": "^4.21.2",
+    "fast-xml-parser": "^4.5.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.11"
+  }
 }

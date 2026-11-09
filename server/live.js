@@ -54,3 +54,39 @@ export async function refreshStatus(fetchImpl = fetch) {
   })();
   try { await task; } finally { task = null; }
 }
+
+// 맞춤형 특기병 정보(입영일별 모집·선발·잔여). 한 페이지(약 100여 건)라 10분 캐시로 충분하다.
+// 실패하면 runtime.jobfit을 비우지 않고(이전 성공값 유지) 저장된 기준자료로 넘어간다.
+let jobfitTask = null;
+let jobfitNext = 0;
+export async function refreshJobfit(fetchImpl = fetch) {
+  if (jobfitTask) return jobfitTask;
+  if (Date.now() < jobfitNext) return;
+  jobfitTask = (async () => {
+    const at = new Date().toISOString();
+    try {
+      if (!API_KEY) throw new Error('missing_key');
+      const response = await fetchImpl(`${APIS.jobfit.url}?serviceKey=${API_KEY}&numOfRows=1000&pageNo=1`, { signal: AbortSignal.timeout(10000) });
+      if (!response.ok) throw new Error('upstream_http');
+      const data = parser.parse(await response.text());
+      const header = data.response?.header;
+      if (!header || !['0', '00'].includes(String(header.resultCode))) throw new Error('upstream_error');
+      const body = data.response.body;
+      const raw = body.items?.item || [];
+      const rows = Array.isArray(raw) ? raw : [raw];
+      const total = Number(body.totalCount);
+      if (!Number.isFinite(total) || rows.length < total) throw new Error('incomplete_response');
+      const items = rows.map((r) => ({ branch: r.gtcdNm1 === '해병' ? '해병대' : r.gtcdNm1, year: r.mojipYy, round: r.mojipTms,
+        mosCode: r.gsteukgiCd, mosName: r.gsteukgiNm, unit: r.gtcdNm2, enlistDate: String(r.ipyeongDt || ''),
+        quota: number(r.mojipPcnt), selected: number(r.cjsbinweon), vacancy: number(r.jygs) }));
+      if (items.some((r) => !r.mosCode || !Number.isFinite(r.quota) || !/^\d{8}$/.test(r.enlistDate))) throw new Error('invalid_response');
+      runtime.jobfit = { items, fetchedAt: at };
+      runtime.logs.push({ api: 'jobfit', at, ok: true, httpStatus: 200 });
+      jobfitNext = Date.now() + 10 * 60000;
+    } catch {
+      runtime.logs.push({ api: 'jobfit', at, ok: false, httpStatus: null });
+      jobfitNext = Date.now() + 60000;
+    } finally { runtime.logs = runtime.logs.slice(-50); }
+  })();
+  try { await jobfitTask; } finally { jobfitTask = null; }
+}
