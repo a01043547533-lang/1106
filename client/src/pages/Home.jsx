@@ -25,10 +25,9 @@ export default function Home() {
   }
 
   const openRows = rounds.data?.items || now.value || [];
-  const top = openRows.slice(0, 5);
-  // 지원률 높은 5개: 지원자가 몰리는 인기 특기. 접수 중인 특기가 적으면 두 목록이 겹친다.
-  const hot = [...openRows].filter((s) => s.rate != null).sort((a, b) => b.rate - a.rate).slice(0, 5);
-  const fewOpen = openRows.length > 0 && openRows.length < 10;
+  // 지금 접수 중인 특기를 지원률 낮은 순으로 한 표에. 많으면 12개까지만 보여 주고 전체 보기로 잇는다.
+  const LIMIT = 12;
+  const top = openRows.slice(0, LIMIT);
   const RankTable = ({ rows, label }) => <div className="table-wrap" data-reveal><table className="doc-table rank-table" aria-label={label}>
     <thead><tr><th className="num">순위</th><th>특기</th><th className="num">뽑는 인원</th><th className="num">지원한 인원</th><th>지원률</th></tr></thead>
     <tbody>
@@ -96,13 +95,10 @@ export default function Home() {
 
       <section className="band band-cream" aria-labelledby="low-rate">
         <div className="band-inner">
-          <div className="band-heading" data-reveal><h2 id="low-rate">지금 접수 중인 특기, 지원률 양 끝 5개씩</h2><p>왼쪽은 아직 지원자가 적어 노려볼 만한 특기, 오른쪽은 지원자가 몰리는 인기 특기예요.</p></div>
-          <Status state={now} empty={now.value && !now.value.length ? '접수 중인 특기가 아직 없어요' : null} />
-          {top.length > 0 && <div className="rank-pair">
-            <section aria-labelledby="rank-low"><h3 id="rank-low"><span className="badge green">미달</span> 지원률 낮은 5개</h3><RankTable rows={top} label="지원률 낮은 특기 5개" /></section>
-            <section aria-labelledby="rank-high"><h3 id="rank-high"><span className="badge red">붐빔</span> 지원률 높은 5개</h3><RankTable rows={hot} label="지원률 높은 특기 5개" /></section>
-          </div>}
-          {fewOpen && <p className="muted small" data-reveal>지금 접수 중인 특기가 {openRows.length}개뿐이라 두 목록에 같은 특기가 들어갈 수 있어요. 회차가 열리면 목록이 달라져요.</p>}
+          <div className="band-heading" data-reveal><h2 id="low-rate">지금 접수 중인 특기{openRows.length ? ` ${openRows.length}개` : ''}</h2><p>지원률이 낮은 순서예요. 1.0 미만(미달)은 지금 지원자가 모집인원보다 적다는 뜻이에요.</p></div>
+          <Status state={now} empty={now.value && !now.value.length ? '지금 접수 중인 특기가 없어요. 곧 시작하는 접수는 「지금 접수」 화면에서 볼 수 있어요.' : null} />
+          {top.length > 0 && <RankTable rows={top} label="지금 접수 중인 특기" />}
+          {openRows.length > LIMIT && <p className="panel-link" data-reveal><Link to="/now">나머지 {openRows.length - LIMIT}개 포함 전체 보기 →</Link></p>}
           <aside className="note" data-reveal aria-labelledby="rate-help-title">
             <p className="note-title" id="rate-help-title">지원률 읽는 법</p>
             <p>지원률은 접수 인원 ÷ 모집 인원이에요. <strong>1.0 미만</strong>(미달)이면 뽑는 인원보다 지원한 사람이 적다는 뜻이에요. 접수 중에는 달라질 수 있고, 최종 합격을 뜻하거나 보장하지는 않아요.</p>
