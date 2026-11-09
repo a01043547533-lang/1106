@@ -21,6 +21,8 @@ export default function Plan() {
   const [months, setMonths] = useState([]);
   const [fixed, setFixed] = useState('');
   const [goal, setGoal] = useState({ month: '', branch: '육군', slack: 1 });
+  // 입영월을 정하는 두 방법: 돌아올 달(복학·복직)로 계산하거나, 입영월을 직접 고르거나. 둘은 뜻이 달라 한 화면에 나란히 두지 않는다.
+  const [mode, setMode] = useState('goal');
   const terms = useApi('/api/service-terms');
   const overview = useApi('/api/plan-overview', { interval: 60000 });
   const monthInfo = (m) => overview.data?.months?.[m];
@@ -84,12 +86,17 @@ export default function Plan() {
       {tab === 'plan' && (
         <>
           <ol className="score-guide" aria-label="사용 순서">
-            <li aria-current={!goal.month && !months.length ? 'step' : undefined}><b>01</b><span>돌아올 달 넣기 (또는 입영월 직접 고르기)</span></li>
-            <li aria-current={(goal.month || months.length) && !plan.data ? 'step' : undefined}><b>02</b><span>맞는 입영월 확인</span></li>
-            <li aria-current={plan.data ? 'step' : undefined}><b>03</b><span>그 달 회차의 접수기간 보기</span></li>
+            <li aria-current={!months.length ? 'step' : undefined}><b>01</b><span>입영월 정하기</span></li>
+            <li aria-current={months.length && !plan.data ? 'step' : undefined}><b>02</b><span>그 달 회차의 접수기간 보기</span></li>
           </ol>
-          <section className="card goal-box">
-            <h2>1단계 · 언제 돌아와야 하나요?</h2>
+          <p className="lead">입영월을 정하는 방법은 두 가지예요. 하나만 쓰면 돼요.</p>
+          <div className="tabs mode-tabs" role="group" aria-label="입영월 정하는 방법">
+            <button aria-pressed={mode === 'goal'} className={mode === 'goal' ? 'on' : ''} onClick={() => setMode('goal')}>돌아올 달로 계산하기</button>
+            <button aria-pressed={mode === 'manual'} className={mode === 'manual' ? 'on' : ''} onClick={() => { setMode('manual'); setGoal({ ...goal, month: '' }); }}>입영월 직접 고르기</button>
+          </div>
+          {mode === 'goal' && <section className="card goal-box">
+            <h2>돌아올 달로 계산하기</h2>
+            <p className="small">「돌아올 달」은 복학·복직처럼 사회로 돌아와야 하는 달이에요. 여기서 복무기간과 여유를 빼면 「입영월」(군대에 들어가는 달)이 나와요.</p>
             <p className="small">복학이나 복직하고 싶은 달을 고르면, 복무기간을 빼서 입영해야 하는 달을 계산해요. 예: 2028년 9월 복학 → 2026년 12월~2027년 2월 입영.</p>
             <div className="row">
               {/* 달력 입력(type=month)은 브라우저에 따라 글자칸으로 바뀌어 형식이 어긋나므로, 어디서나 같은 연도·월 선택 상자를 쓴다 */}
@@ -110,8 +117,8 @@ export default function Plan() {
                   {earliestReturn && latestNeeded < nextMonths(1)[0] && <p>지금 바로 지원해 다음 달({ym(nextMonths(1)[0])})에 입영하면 {goal.branch} 기준 가장 빠른 복귀는 <b>{ym(earliestReturn)}</b>이에요. 복귀 월을 그 뒤로 바꿔 보세요.</p>}
                 </div>)}
             {!goal.month && <p className="muted small">연도를 고르는 순간 결과가 아래에 나와요. 예: 2028년 9월 복학이면 육군(18개월)은 2026년 12월~2027년 2월 입영이 맞아요.</p>}
-          </section>
-          <h2 className="plan-step">2단계 · 입영월 고르기 <span className="muted small">(최대 3개 · 1단계를 넣으면 자동으로 골라져요)</span></h2>
+          </section>}
+          <h2 className="plan-step">{mode === 'goal' ? '계산된 입영월' : '입영월 직접 고르기'} <span className="muted small">{mode === 'goal' ? (months.length ? '(결과가 자동으로 선택돼요 · 칩을 눌러 바꿀 수도 있어요)' : '(위에서 돌아올 달을 고르면 여기에 표시돼요)') : '(최대 3개)'}</span></h2>
           <p className="muted small">초록 점이 있는 달에는 지금 접수 중이거나 예정인 회차가 있어요.</p>
           <div className="chips month-chips">
             {nextMonths(12).map((m) => { const i = monthInfo(m); const live = i ? i.open + i.upcoming : 0; return (
@@ -126,8 +133,8 @@ export default function Plan() {
               {un.length > 0 && <> 입영월 미정으로 접수 중·예정: {un.map((r) => `${r.branch} ${r.category} ${r.round}회차`).join(', ')} → <Link to="/now">지금 접수</Link></>}
             </p>;
           })()}
-          {months.length > 0 && <h2 className="plan-step">3단계 · 고른 달에 입영하는 회차</h2>}
-          {!months.length && <p className="feedback empty" role="status">아직 고른 달이 없어요. 위에서 돌아올 달을 넣거나 입영월 칩을 눌러 보세요.</p>}
+          {months.length > 0 && <h2 className="plan-step">이 달에 입영하는 회차</h2>}
+          {!months.length && <p className="feedback empty" role="status">{mode === 'goal' ? '아직 계산된 입영월이 없어요. 위에서 돌아올 연도와 월을 골라 주세요.' : '아직 고른 입영월이 없어요. 위 칩에서 달을 눌러 주세요.'}</p>}
           {plan.loading && <p className="muted">불러오는 중이에요…</p>}
           {(plan.data?.items || []).map((it) => (
             <section key={it.month} className="card">
