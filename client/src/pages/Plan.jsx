@@ -77,7 +77,7 @@ export default function Plan() {
 
   return (
     <div ref={root}>
-      <PageHeading title="입영월별 모집병 플래너" description="언제 돌아와야 하는지(복학·복직 월)만 넣으면 그에 맞는 입영월과 그 달에 입영하는 모집 회차를 보여 줘요. 입영월을 직접 골라도 돼요." />
+      <PageHeading title="입영월별 모집병 플래너" description="복귀 희망 월(복학·복직)만 넣으면 그에 맞는 입영월과 그 달에 입영하는 모집 회차를 보여 줘요. 입영월을 직접 골라도 돼요." />
       <div className="tabs">
         <button aria-pressed={tab === 'plan'} className={tab === 'plan' ? 'on' : ''} onClick={() => setTab('plan')}>입영월 플래너</button>
         <button aria-pressed={tab === 'katusa'} className={tab === 'katusa' ? 'on' : ''} onClick={() => setTab('katusa')}>카투사</button>
@@ -91,17 +91,17 @@ export default function Plan() {
           </ol>
           <p className="lead">입영월을 정하는 방법은 두 가지예요. 하나만 쓰면 돼요.</p>
           <div className="tabs mode-tabs" role="group" aria-label="입영월 정하는 방법">
-            <button aria-pressed={mode === 'goal'} className={mode === 'goal' ? 'on' : ''} onClick={() => setMode('goal')}>돌아올 달로 계산하기</button>
+            <button aria-pressed={mode === 'goal'} className={mode === 'goal' ? 'on' : ''} onClick={() => setMode('goal')}>복귀 희망 월로 계산하기</button>
             <button aria-pressed={mode === 'manual'} className={mode === 'manual' ? 'on' : ''} onClick={() => { setMode('manual'); setGoal({ ...goal, month: '' }); }}>입영월 직접 고르기</button>
           </div>
           {mode === 'goal' && <section className="card goal-box">
-            <h2>돌아올 달로 계산하기</h2>
-            <p className="small">「돌아올 달」은 복학·복직처럼 사회로 돌아와야 하는 달이에요. 여기서 복무기간과 여유를 빼면 「입영월」(군대에 들어가는 달)이 나와요.</p>
+            <h2>복귀 희망 월(복학·복직)로 계산하기</h2>
+            <p className="small">「복귀 희망 월」은 복학·복직처럼 사회로 돌아오고 싶은 달이에요. 여기서 복무기간과 여유를 빼면 「입영월」(군대에 들어가는 달)이 나와요.</p>
             <p className="small">복학이나 복직하고 싶은 달을 고르면, 복무기간을 빼서 입영해야 하는 달을 계산해요. 예: 2028년 9월 복학 → 2026년 12월~2027년 2월 입영.</p>
             <div className="row">
               {/* 달력 입력(type=month)은 브라우저에 따라 글자칸으로 바뀌어 형식이 어긋나므로, 어디서나 같은 연도·월 선택 상자를 쓴다 */}
-              <label>돌아올 연도<select value={goal.month.slice(0, 4)} onChange={(e) => setGoal({ ...goal, month: e.target.value ? `${e.target.value}-${goal.month.slice(5, 7) || '03'}` : '' })}><option value="">선택</option>{Array.from({ length: 4 }, (_, i) => String(new Date().getFullYear() + i)).map((y) => <option key={y} value={y}>{y}년</option>)}</select></label>
-              <label>돌아올 월<select value={goal.month.slice(5, 7)} onChange={(e) => setGoal({ ...goal, month: goal.month.slice(0, 4) ? `${goal.month.slice(0, 4)}-${e.target.value}` : '' })} disabled={!goal.month.slice(0, 4)}>{Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map((m) => <option key={m} value={m}>{Number(m)}월</option>)}</select></label>
+              <label>복귀 희망 연도<select value={goal.month.slice(0, 4)} onChange={(e) => setGoal({ ...goal, month: e.target.value ? `${e.target.value}-${goal.month.slice(5, 7) || '03'}` : '' })}><option value="">선택</option>{Array.from({ length: 4 }, (_, i) => String(new Date().getFullYear() + i)).map((y) => <option key={y} value={y}>{y}년</option>)}</select></label>
+              <label>복귀 희망 월<select value={goal.month.slice(5, 7)} onChange={(e) => setGoal({ ...goal, month: goal.month.slice(0, 4) ? `${goal.month.slice(0, 4)}-${e.target.value}` : '' })} disabled={!goal.month.slice(0, 4)}>{Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map((m) => <option key={m} value={m}>{Number(m)}월</option>)}</select></label>
               <label>군<select value={goal.branch} onChange={(e) => setGoal({ ...goal, branch: e.target.value })}>{['육군', '해군', '공군', '해병대'].map((b) => <option key={b}>{b}</option>)}</select></label>
               <label>전역 뒤 여유<select value={goal.slack} onChange={(e) => setGoal({ ...goal, slack: Number(e.target.value) })}>{[0, 1, 2, 3].map((n) => <option key={n} value={n}>{n}개월</option>)}</select></label>
             </div>
@@ -118,7 +118,7 @@ export default function Plan() {
                 </div>)}
             {!goal.month && <p className="muted small">연도를 고르는 순간 결과가 아래에 나와요. 예: 2028년 9월 복학이면 육군(18개월)은 2026년 12월~2027년 2월 입영이 맞아요.</p>}
           </section>}
-          <h2 className="plan-step">{mode === 'goal' ? '계산된 입영월' : '입영월 직접 고르기'} <span className="muted small">{mode === 'goal' ? (months.length ? '(결과가 자동으로 선택돼요 · 칩을 눌러 바꿀 수도 있어요)' : '(위에서 돌아올 달을 고르면 여기에 표시돼요)') : '(최대 3개)'}</span></h2>
+          <h2 className="plan-step">{mode === 'goal' ? '계산된 입영월' : '입영월 직접 고르기'} <span className="muted small">{mode === 'goal' ? (months.length ? '(결과가 자동으로 선택돼요 · 칩을 눌러 바꿀 수도 있어요)' : '(위에서 복귀 희망 월을 고르면 여기에 표시돼요)') : '(최대 3개)'}</span></h2>
           <p className="muted small">초록 점이 있는 달에는 지금 접수 중이거나 예정인 회차가 있어요.</p>
           <div className="chips month-chips">
             {nextMonths(12).map((m) => { const i = monthInfo(m); const live = i ? i.open + i.upcoming : 0; return (
@@ -134,7 +134,7 @@ export default function Plan() {
             </p>;
           })()}
           {months.length > 0 && <h2 className="plan-step">이 달에 입영하는 회차</h2>}
-          {!months.length && <p className="feedback empty" role="status">{mode === 'goal' ? '아직 계산된 입영월이 없어요. 위에서 돌아올 연도와 월을 골라 주세요.' : '아직 고른 입영월이 없어요. 위 칩에서 달을 눌러 주세요.'}</p>}
+          {!months.length && <p className="feedback empty" role="status">{mode === 'goal' ? '아직 계산된 입영월이 없어요. 위에서 복귀 희망 연도와 월을 골라 주세요.' : '아직 고른 입영월이 없어요. 위 칩에서 달을 눌러 주세요.'}</p>}
           {plan.loading && <p className="muted">불러오는 중이에요…</p>}
           {(plan.data?.items || []).map((it) => (
             <section key={it.month} className="card">
