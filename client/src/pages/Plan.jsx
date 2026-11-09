@@ -1,5 +1,5 @@
 import { PageHeading } from '../design.jsx';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useReveal } from '../motion.jsx';
 // 입영월 플래너
 import { useState } from 'react';
@@ -42,6 +42,12 @@ export default function Plan() {
     return [addMonths(latest, -2), addMonths(latest, -1), latest].filter((m) => nextMonths(18).includes(m));
   })();
   const applySuggested = () => setMonths(suggested.slice(-3).sort());
+  // 복귀 월을 넣으면 따로 누르지 않아도 그 달들을 바로 골라 아래에 회차가 나온다.
+  const suggestedKey = suggested.join(',');
+  useEffect(() => { if (suggestedKey) setMonths(suggestedKey.split(',').slice(-3).sort()); }, [suggestedKey]);
+  // 과거 시점을 넣었을 때: 지금 지원하면 가장 빠른 복귀가 언제인지 알려 준다(다음 달 입영 기준).
+  const latestNeeded = goal.month && termOf(goal.branch) ? addMonths(goal.month, -termOf(goal.branch) - Number(goal.slack || 0)) : null;
+  const earliestReturn = termOf(goal.branch) ? addMonths(nextMonths(1)[0], termOf(goal.branch) + Number(goal.slack || 0)) : null;
   const toggle = (m) => setMonths(months.includes(m) ? months.filter((x) => x !== m) : months.length < 3 ? [...months, m].sort() : months);
 
   // 월별 특기 비교표: 특기명 × 월 → 지원률
@@ -86,8 +92,16 @@ export default function Plan() {
               <label>전역 뒤 여유<select value={goal.slack} onChange={(e) => setGoal({ ...goal, slack: Number(e.target.value) })}>{[0, 1, 2, 3].map((n) => <option key={n} value={n}>{n}개월</option>)}</select></label>
             </div>
             {goal.month && termOf(goal.branch) && (suggested.length
-              ? <p>{goal.branch} 복무 {termOf(goal.branch)}개월 + 여유 {goal.slack}개월 → <b>{suggested.map((m) => m.replace('-', '.')).join(', ')}</b> 입영이 맞아요. <button type="button" className="link" onClick={applySuggested}>이 달들로 비교하기</button></p>
-              : <p className="muted">그 시점에 맞추려면 이미 입영했어야 하거나 18개월보다 먼 미래예요. 복귀 월이나 군을 바꿔 보세요.</p>)}
+              ? <div className="goal-result" role="status">
+                  <p className="goal-result-title">결과 · {ym(goal.month)} 복귀에 맞는 입영월</p>
+                  <p className="goal-result-main"><b>{suggested.map(ym).join(' · ')}</b></p>
+                  <p className="small">{goal.branch} 복무 {termOf(goal.branch)}개월 + 전역 뒤 여유 {goal.slack}개월을 뺀 달이에요. 아래에 이 달들의 회차가 바로 나와요. 다른 달도 보려면 달 칩에서 바꿔 고르세요.</p>
+                </div>
+              : <div className="goal-result warn" role="status">
+                  <p className="goal-result-title">결과 · 이 시점에는 맞출 수 없어요</p>
+                  <p>{ym(goal.month)}에 돌아오려면 <b>{ym(latestNeeded)}</b>까지는 입영했어야 해요{latestNeeded < nextMonths(1)[0] ? '(이미 지났어요)' : '(18개월보다 먼 미래예요)'}.</p>
+                  {earliestReturn && latestNeeded < nextMonths(1)[0] && <p>지금 바로 지원해 다음 달({ym(nextMonths(1)[0])})에 입영하면 {goal.branch} 기준 가장 빠른 복귀는 <b>{ym(earliestReturn)}</b>이에요. 복귀 월을 그 뒤로 바꿔 보세요.</p>}
+                </div>)}
             {!goal.month && <p className="muted small">예: 2028년 3월 복학이면 육군(18개월)은 2026년 7~8월 입영이 맞아요. 전역 뒤 한 달은 비워 두는 편이 좋아요.</p>}
           </section>
           <div className="chips month-chips">

@@ -444,6 +444,12 @@ details.result-group[open] > summary { margin-bottom: 12px; }
 .plan-now { margin: -8px 0 16px; }
 .warn p { margin: 0 0 6px; } .warn p:last-child { margin: 0; }
 .goal-box h2 { font-size: 18px; }
+.goal-result { margin: 8px 0 0; padding: 14px 16px; border-radius: var(--radius-sm); background: var(--white); border: 1px solid #cfdcea; }
+.goal-result p { margin: 0 0 6px; } .goal-result p:last-child { margin: 0; }
+.goal-result-title { font-size: 14px; font-weight: 800; color: #264a72; }
+.goal-result-main b { font-size: 22px; color: var(--maroon); }
+.goal-result.warn { background: var(--amber-soft); border-color: #ecd68f; }
+.goal-result.warn .goal-result-title { color: var(--maroon); }
 .forecast.ok b { color: var(--maroon); }
 .exam-timeline { margin: 14px 0 0; padding: 12px 14px; border: 1px dashed var(--line-2); border-radius: var(--radius-sm); background: var(--white); }
 .exam-timeline .exam-title { margin: 0 0 6px; font-weight: 750; font-size: 15px; }
