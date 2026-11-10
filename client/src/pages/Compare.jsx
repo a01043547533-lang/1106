@@ -16,7 +16,9 @@ export function useCompareList() {
   useEffect(() => { listeners.add(setList); return () => listeners.delete(setList); }, []);
   const toggle = (code) => { const cur = readList(); writeList(cur.includes(code) ? cur.filter((c) => c !== code) : cur.length >= MAX ? cur : [...cur, code]); };
   const remove = (code) => writeList(readList().filter((c) => c !== code));
-  return { list, toggle, remove, full: list.length >= MAX };
+  // 군 구분 전에 담은 공유 코드를 군을 붙인 키로 바꾼다(같은 자리 유지, 이미 담겨 있으면 하나만 남긴다).
+  const replace = (from, to) => { const cur = readList(); writeList(cur.includes(to) ? cur.filter((c) => c !== from) : cur.map((c) => (c === from ? to : c))); };
+  return { list, toggle, remove, replace, full: list.length >= MAX };
 }
 
 // 특기 상세에서 쓰는 버튼
@@ -47,19 +49,20 @@ const ROWS = [
 ];
 
 export default function Compare() {
-  const { list, remove, toggle, full } = useCompareList();
+  const { list, remove, toggle, replace, full } = useCompareList();
   const [details, setDetails] = useState({});
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     const missing = list.filter((c) => !details[c]);
     if (!missing.length) return undefined;
     let alive = true; setLoading(true);
-    Promise.all(missing.map((c) => { const k = parseCompareKey(c); return fetch(`/api/mos/${encodeURIComponent(k.code)}${k.branch ? `?branch=${encodeURIComponent(k.branch)}` : ''}`).then((r) => (r.ok ? r.json() : null)).catch(() => null).then((d) => [c, d && !d.ambiguous ? d : { error: true, mosCode: k.code }]); }))
+    Promise.all(missing.map((c) => { const k = parseCompareKey(c); return fetch(`/api/mos/${encodeURIComponent(k.code)}${k.branch ? `?branch=${encodeURIComponent(k.branch)}` : ''}`).then((r) => (r.ok ? r.json() : null)).catch(() => null).then((d) => [c, d?.ambiguous ? { ambiguous: true, mosCode: k.code, choices: d.choices || [] } : d || { error: true, mosCode: k.code }]); }))
       .then((pairs) => { if (alive) { setDetails((s) => ({ ...s, ...Object.fromEntries(pairs) })); setLoading(false); } });
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [list]);
-  const cols = list.map((c) => details[c]).filter(Boolean);
+  const cols = list.map((c) => details[c]).filter((d) => d && !d.error && !d.ambiguous);
+  const ok = (d) => d && !d.error && !d.ambiguous;
   return (
     <>
       <PageHeading title="특기 비교함" description={`후보 특기를 최대 ${MAX}개까지 담아 복무기간, 신체조건, 지원률 흐름을 나란히 비교해요. 목록은 이 브라우저에만 저장돼요.`} />
@@ -71,10 +74,12 @@ export default function Compare() {
       {!list.length && <section className="card"><p>아직 담은 특기가 없어요. 고민 중인 특기 2~3개를 담으면 어떤 조건이 다른지 한눈에 보여요.</p></section>}
       {list.length > 0 && <div className="table-wrap compare-wrap">
         <table className="grid compare-table">
-          <thead><tr><th scope="col">항목</th>{list.map((c) => { const d = details[c]; return <th scope="col" key={c}>{d && !d.error ? <><BranchBadge branch={d.branch} /> <Link to={mosHref(parseCompareKey(c).code, parseCompareKey(c).branch)}>{d.mosName}</Link></> : d?.error ? `불러오기 실패 (${c})` : '불러오는 중…'}<div><button type="button" className="link small" onClick={() => remove(c)}>빼기</button></div></th>; })}</tr></thead>
+          <thead><tr><th scope="col">항목</th>{list.map((c) => { const d = details[c]; return <th scope="col" key={c}>{ok(d) ? <><BranchBadge branch={d.branch} /> <Link to={mosHref(parseCompareKey(c).code, parseCompareKey(c).branch)}>{d.mosName}</Link></>
+            : d?.ambiguous ? <div className="compare-pick"><p className="small">특기코드 {d.mosCode}은 여러 군에 있어요. 비교할 군을 골라 주세요.</p>{d.choices.map((ch) => <button key={ch.branch} type="button" className="chip" onClick={() => replace(c, compareKey(d.mosCode, ch.branch))}><BranchBadge branch={ch.branch} /> {ch.mosName}</button>)}</div>
+            : d?.error ? `불러오기 실패 (${c})` : '불러오는 중…'}<div><button type="button" className="link small" onClick={() => remove(c)}>빼기</button></div></th>; })}</tr></thead>
           <tbody>
-            {ROWS.map(([label, fn]) => <tr key={label}><th scope="row">{label}</th>{list.map((c) => { const d = details[c]; return <td key={c}>{d && !d.error ? fn(d) : loading ? '…' : '-'}</td>; })}</tr>)}
-            <tr><th scope="row">더 보기</th>{list.map((c) => <td key={c}><Link to={mosHref(parseCompareKey(c).code, parseCompareKey(c).branch)}>상세</Link> · <Link to={calcHref(parseCompareKey(c).code, parseCompareKey(c).branch)}>예상 배점</Link></td>)}</tr>
+            {ROWS.map(([label, fn]) => <tr key={label}><th scope="row">{label}</th>{list.map((c) => { const d = details[c]; return <td key={c}>{ok(d) ? fn(d) : loading && !d ? '…' : '-'}</td>; })}</tr>)}
+            <tr><th scope="row">더 보기</th>{list.map((c) => <td key={c}>{details[c]?.ambiguous ? '-' : <><Link to={mosHref(parseCompareKey(c).code, parseCompareKey(c).branch)}>상세</Link> · <Link to={calcHref(parseCompareKey(c).code, parseCompareKey(c).branch)}>예상 배점</Link></>}</td>)}</tr>
           </tbody>
         </table>
       </div>}

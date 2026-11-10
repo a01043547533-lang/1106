@@ -603,3 +603,6 @@ details.result-group[open] > summary { margin-bottom: 12px; }
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
   .reveal-ready { opacity: 1 !important; transform: none !important; }
 }
+
+.compare-pick { display: flex; flex-wrap: wrap; gap: 6px; font-weight: normal; }
+.compare-pick p { flex-basis: 100%; margin: 0 0 2px; }
