@@ -4,7 +4,9 @@ import { useEffect, useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MMA_APPLY_URL, MMA_PLANS_URL, MMA_PORTAL_URL } from './lib/official.js';
 import { downloadIcs, googleCalendarUrl } from './lib/ics.js';
-import { LIVE_EVENT, getJson, peekJson } from './lib/fetch-cache.js';
+import { useApi } from './lib/use-api.js';
+export { useApi };
+export { dday } from '../../shared/dates.js';
 
 export const n = (it) => it?._norm || it || {};
 // 특기 주소. 특기 코드는 군마다 따로 매겨져 같은 코드가 여러 군에 있으므로 군을 함께 넘긴다.
@@ -24,30 +26,6 @@ export function useDebounced(value, ms = 300) {
   const [v, setV] = useState(value);
   useEffect(() => { const id = setTimeout(() => setV(value), ms); return () => clearTimeout(id); }, [value, ms]);
   return v;
-}
-
-// 클라이언트에서만 부르는 API (SSR 데이터가 없는 화면용)
-// 같은 주소의 동시 요청은 하나로 합치고 잠깐 재사용한다(lib/fetch-cache.js). 주기 갱신은 새로 받는다.
-export function useApi(url, { interval = 0 } = {}) {
-  const [state, setState] = useState(() => { const cached = peekJson(url); return { data: cached ?? null, error: null, loading: Boolean(url) && cached === undefined, at: cached === undefined ? null : new Date() }; });
-  useEffect(() => {
-    if (!url) { setState({ data: null, error: null, loading: false, at: null }); return undefined; }
-    let alive = true;
-    const load = (force) => {
-      if (typeof document !== 'undefined' && document.hidden) return; // 탭이 가려져 있으면 갱신을 멈춘다
-      getJson(url, { force })
-        .then((data) => alive && setState({ data, error: null, loading: false, at: new Date() }))
-        .catch((error) => alive && setState((s) => ({ ...s, error, loading: false })));
-    };
-    const cached = peekJson(url);
-    setState((s) => (cached === undefined ? { ...s, loading: true } : { data: cached, error: null, loading: false, at: s.at || new Date() }));
-    if (cached === undefined) load(false);
-    const id = interval ? setInterval(() => load(true), interval) : null;
-    const onLive = () => { if (!peekJson(url)) load(true); };
-    window.addEventListener(LIVE_EVENT, onLive);
-    return () => { alive = false; if (id) clearInterval(id); window.removeEventListener(LIVE_EVENT, onLive); };
-  }, [url, interval]);
-  return state;
 }
 
 export function Status({ state, empty }) {
@@ -201,14 +179,6 @@ export function MultiPicker({ value, onChange, placeholder = '자격증·면허�
       {partial && hits.length <= limit && <p className="muted small">{q.trim() ? '일치하는 항목이 더 있으면 이름을 더 적어 주세요.' : `전체 ${Number(all.data.total).toLocaleString()}개 중 많이 쓰는 항목만 보여 줘요. 이름으로 검색하면 나머지도 찾을 수 있어요.`}</p>}
     </>}
   </div>;
-}
-
-export function dday(date) {
-  if (!date) return null;
-  const d = Math.ceil((new Date(date.slice(0, 10)) - new Date(new Date().toISOString().slice(0, 10))) / 86400000);
-  if (d > 0) return `D-${d}`;
-  if (d === 0) return 'D-day';
-  return null;
 }
 
 export function addMonths(ym, months) {

@@ -1,6 +1,7 @@
 import { PageHeading } from '../design.jsx';
 import { CertificateSection } from '../exam-timeline.jsx';
 // ★ 특기 찾기 — 내 신체조건·자격으로 갈 수 있는 특기. 입력은 서버에 저장되지 않는다.
+import { itemParams } from '../lib/item-params.js';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BranchBadge, MultiPicker, OfficialApplyLink, RateBar, RulesBox, mosHref } from '../components.jsx';
@@ -36,7 +37,7 @@ export default function Find() {
     e.preventDefault();
     if (Object.keys(errors).length) { setTouched({ height: true, weight: true, vision: true }); document.querySelector('.field-error')?.closest('label')?.querySelector('input')?.focus(); return; }
     setRes({ data: null, error: null, busy: true });
-    const qs = new URLSearchParams(Object.entries({ ...f, items: items.join(',') }).filter(([, v]) => v));
+    const qs = itemParams(items, f);
     try {
       const r = await fetch(`/api/mos/search?${qs}`);
       if (!r.ok) throw new Error();

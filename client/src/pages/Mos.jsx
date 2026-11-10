@@ -80,7 +80,7 @@ export function MosDetail() {
   const st = useRouteData('mos', `/api/mos/${encodeURIComponent(code)}${branchParam ? `?branch=${encodeURIComponent(branchParam)}` : ''}`);
   const d = st.value;
   // 군이 하나뿐인 코드인데 주소에 군이 붙어 있으면 대표 주소로 바꾼다(같은 페이지가 여러 주소로 잡히지 않게)
-  useEffect(() => { if (d && !d.ambiguous && branchParam && (d.branches || []).length <= 1) navigate(`/mos/${encodeURIComponent(code)}`, { replace: true }); }, [d, branchParam, code, navigate]);
+  useEffect(() => { if (d && d.mosCode === code && !st.loading && !d.ambiguous && branchParam && (d.branches || []).length <= 1) navigate(`/mos/${encodeURIComponent(code)}`, { replace: true }); }, [d, st.loading, branchParam, code, navigate]);
   if (!d) return <><PageHeading title="특기 정보" /><Status state={st} empty={!st.loading && !st.error ? '특기를 찾을 수 없어요. 주소의 특기 코드나 군을 확인해 주세요.' : null} /></>;
   if (d.ambiguous) return <>
     <nav className="crumb" aria-label="위치"><Link to="/">입대타이밍</Link> › <Link to="/mos">특기 목록</Link> › 특기코드 {d.mosCode}</nav>

@@ -73,14 +73,14 @@ try {
   assert(await evaluate("document.querySelector('main').textContent.includes('2028년 07월')"));
   await click('input[type=checkbox]'); assert(await evaluate('document.querySelector("input[type=checkbox]").checked'));
   report.interactions.push('Service duration calculation and preparation checklist');
-  await go('/score'); await value('.picker input', '운전');
-  await click('.picker-options input[type=checkbox]'); await click('.cardbtn');
+  await go('/calc'); await value('.mos-search input', '161.103'); await click('.mos-search-hits button'); await value('.picker input', '운전');
+  await click('.picker-options input[type=checkbox]');
   assert(await evaluate('!!document.querySelector("table.grid") || !!document.querySelector(".warn")'));
   report.interactions.push('Score qualification selection, specialty selection and official score table');
   await go('/social'); await value('input', '없는기관확인xyz');
   assert(await evaluate('!!document.querySelector(".feedback.empty")'));
   report.interactions.push('Social search and empty result');
-  await go('/calendar'); await click('.tabs button:nth-child(4)');
+  await go('/calendar'); await click('.tabs button:nth-child(2)');
   report.interactions.push('Calendar category filter');
   await click('header nav a[href="/find"]');
   assert.equal(await evaluate('document.activeElement.tagName'), 'H1');
@@ -89,7 +89,7 @@ try {
   assert.equal(await evaluate('location.pathname'), '/calendar');
   report.interactions.push('Internal navigation, heading focus, scroll reset and browser Back');
   await send('Emulation.setEmulatedMedia', { features: [{name:'prefers-reduced-motion',value:'reduce'}] });
-  await go('/'); assert.equal(await evaluate('getComputedStyle(document.querySelector(".kinetic span span")).animationName'), 'none');
+  await go('/'); assert.equal(await evaluate('getComputedStyle(document.querySelector("h1")).animationName'), 'none');
   report.interactions.push('Reduced motion reveals complete title without animation');
   assert.deepEqual(errors, []);
   console.log(JSON.stringify({ routes: report.routes.length, interactions: report.interactions, errors }, null, 2));

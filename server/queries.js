@@ -1,3 +1,4 @@
+import { nextExamWindow } from '../shared/dates.js';
 // API 핸들러와 SSR 로더가 함께 쓰는 조회 함수.
 // 같은 함수를 쓰기 때문에 화면 본문 숫자와 /api 응답 숫자가 갈리지 않는다.
 import * as repo from './repo/index.js';
@@ -104,9 +105,7 @@ export function mosIndex() {
 export const normBranch = (b) => (b === '해병' ? '해병대' : b || null);
 const ELIG_LIMIT = 150; // 화면은 80개만 보여 주므로 여유 있게. 4.5MB(Vercel 응답 한도)를 넘던 특기(901 등)가 있었다.
 const KIND_ORDER = { 자격: 0, 면허: 1, 전공: 2 };
-const branchCache = new Map();
 export function branchesOfCode(code) {
-  if (branchCache.has(code)) return branchCache.get(code);
   const set = new Set();
   for (const it of repo.getDataset('mos').items) if (norm(it).mosCode === code) set.add(normBranch(norm(it).branch));
   for (const r of repo.latestSnapshots()) if (r.mosCode === code) set.add(normBranch(r.branch));
@@ -114,7 +113,6 @@ export function branchesOfCode(code) {
   // 여러 군 여부는 실제 특기 자료로만 판단한다. 자격 자료에만 다른 군의 같은 코드가 있는 경우가 있어(36·43 등), 그걸로 판단하면 목록과 상세가 어긋난다.
   set.delete(null);
   const list = [...set].sort((a, b) => a.localeCompare(b, 'ko'));
-  branchCache.set(code, list);
   return list;
 }
 // 한 군의 인정 자격 전체(중복 항목 제거). 상세는 일부만, 대조(match)는 전체를 쓴다.
@@ -132,7 +130,9 @@ export function mosMatch(code, branch, items) {
 function finalRatesOf(code, branch, shared) {
   if (!shared) return repo.getFinalRates().filter((f) => f.mosCode === code);
   const by = new Map();
-  for (const r of repo.getSnapshots()) {
+  for (const r of repo.latestSnapshots()) {
+    const end = scheduleTime(r.applyEnd, true);
+    if (!Number.isFinite(end) || end > Date.now() || !(Date.parse(r.collectedAt) >= end)) continue;
     if (r.mosCode !== code || normBranch(r.branch) !== branch || !r.roundLabel) continue;
     const g = by.get(r.roundLabel) || { quota: 0, applicants: 0 };
     g.quota += Number(r.quota) || 0; g.applicants += Number(r.applicants) || 0; by.set(r.roundLabel, g);
@@ -250,7 +250,6 @@ export function examsBefore(deadline, day = today()) {
   const live = runtime.exams;
   const sched = live ? { year: live.year, rounds: live.rounds, source: `한국산업인력공단 국가기술자격 시험정보 API · ${live.fetchedAt.slice(0, 10)} 조회`, sourceUrl: 'https://www.data.go.kr/data/15003029/openapi.do', live: true } : repo.getExamSchedule();
   if (!sched) return { year: null, rounds: [], source: null };
-  const start = (v) => String(v || '').split('~')[0];
-  const rounds = (sched.rounds || []).map((r) => ({ ...r, canApply: start(r.writtenApply) >= day, inTime: !deadline || r.finalResult <= String(deadline).slice(0, 10) }));
+  const rounds = (sched.rounds || []).map((r) => ({ ...r, canApply: Boolean(nextExamWindow(r, day)), inTime: !deadline || Boolean(r.finalResult && r.finalResult <= String(deadline).slice(0, 10)) }));
   return { year: sched.year, source: sched.source, sourceUrl: sched.sourceUrl, note: sched.note, live: Boolean(sched.live), rounds };
 }

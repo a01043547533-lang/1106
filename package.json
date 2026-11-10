@@ -11,7 +11,7 @@
     "dev": "node server/web.js",
     "build": "node scripts/build-forecast.mjs && node scripts/build-eligible-items.mjs && node scripts/fetch-exam-schedule.mjs && vite build --config client/vite.config.js && node scripts/postbuild-seo.mjs",
     "start": "node server/web.js --prod",
-    "test": "node --test tests/vercel.test.mjs",
+    "test": "node --test tests/vercel.test.mjs tests/client.test.mjs tests/regressions.test.mjs",
     "test:vercel": "node --test tests/vercel.test.mjs",
     "import:service-terms": "node server/repo/import-service-terms.js",
     "collect": "node scripts/collect-snapshots.mjs",
@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
+    "react-test-renderer": "^18.3.1",
     "vite": "^6.4.6"
   }
 }

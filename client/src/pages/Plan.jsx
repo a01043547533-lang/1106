@@ -45,10 +45,10 @@ export default function Plan() {
     const latest = addMonths(goal.month, -termOf(goal.branch) - gap());
     return [addMonths(latest, -2), addMonths(latest, -1), latest].filter((m) => nextMonths(18).includes(m));
   })();
-  const applySuggested = () => setMonths(suggested.slice(-3).sort());
+
   // 복귀 월을 넣으면 따로 누르지 않아도 그 달들을 바로 골라 아래에 회차가 나온다.
   const suggestedKey = suggested.join(',');
-  useEffect(() => { if (suggestedKey) setMonths(suggestedKey.split(',').slice(-3).sort()); }, [suggestedKey]);
+  useEffect(() => { if (mode === 'goal') setMonths(suggestedKey ? suggestedKey.split(',').slice(-3).sort() : []); }, [suggestedKey, mode]);
   // 과거 시점을 넣었을 때: 지금 지원하면 가장 빠른 복귀가 언제인지 알려 준다(다음 달 입영 기준).
   const latestNeeded = goal.month && termOf(goal.branch) ? addMonths(goal.month, -termOf(goal.branch) - gap()) : null;
   const earliestReturn = termOf(goal.branch) ? addMonths(nextMonths(1)[0], termOf(goal.branch) + gap()) : null;
@@ -132,7 +132,7 @@ export default function Plan() {
           <h2 className="plan-step">{mode === 'goal' ? '계산된 입영월' : '입영월 직접 고르기'} <span className="muted small">{mode === 'goal' ? (months.length ? '(결과가 자동으로 선택돼요 · 칩을 눌러 바꿀 수도 있어요)' : '(위에서 복귀 희망 월을 고르면 여기에 표시돼요)') : '(최대 3개)'}</span></h2>
           <p className="muted small">초록 점이 있는 달에는 지금 접수 중이거나 예정인 회차가 있어요.</p>
           <div className="chips month-chips">
-            {nextMonths(12).map((m) => { const i = monthInfo(m); const live = i ? i.open + i.upcoming : 0; return (
+            {nextMonths(18).map((m) => { const i = monthInfo(m); const live = i ? i.open + i.upcoming : 0; return (
               <button key={m} aria-pressed={months.includes(m)} className={`chip ${months.includes(m) ? 'on' : ''}${live ? ' has-live' : ''}`} onClick={() => toggle(m)} title={i ? `접수 중 ${i.open} · 예정 ${i.upcoming} · 마감 ${i.closed}` : '아직 회차 없음'}>{ym(m)}{live ? <span className="chip-dot" aria-label={`접수 중·예정 ${live}건`} /> : null}</button>
             ); })}
           </div>
@@ -155,8 +155,8 @@ export default function Plan() {
                 <p>이 입영월 회차의 접수는 <b>{(it.applyMonths || []).map(ym).join(', ') || '이전'}</b>에 있었고 모두 끝났어요. 아래 기록은 다음에 비슷한 회차가 열릴 때 참고용이에요.</p>
                 <p className="small">접수 중인 회차는 <Link to="/now">지금 접수</Link>에서, 다음 접수 일정은 <Link to="/calendar">모집 일정</Link>에서 볼 수 있어요. 입영월이 미정인 회차(동반입대병 등)는 이 표에 들어가지 않아요.</p>
               </div>}
-              {it.rounds.slice(0, 8).map((r) => (
-                <div key={`${r.branch}-${r.round}`} className={`tl tl-${r.status}`}>
+              {it.rounds.map((r) => (
+                <div key={`${r.branch}-${r.round}-${r.category}-${r.schedule.applyStart}-${r.schedule.applyEnd}`} className={`tl tl-${r.status}`}>
                   <b>{r.branch} {r.category ? `${r.category} ` : ''}{r.round}회차 <span className={`badge ${STATUS[r.status][1]}`}>{STATUS[r.status][0]}</span></b>
                   <ol className="steps reveal">
                     {STEPS.map(([k, label]) => (

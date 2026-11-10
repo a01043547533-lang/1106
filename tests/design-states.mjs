@@ -15,12 +15,12 @@ const send = (method, params = {}) => new Promise((resolve, reject) => { const k
 const evalJs = async expression => { const r = await send('Runtime.evaluate', {expression,returnByValue:true,awaitPromise:true}); if(r.exceptionDetails) throw new Error(r.exceptionDetails.text); return r.result.value; };
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
 const until = async expr => { for(let i=0;i<160;i++){if(await evalJs(expr)) return;await sleep(250);}throw new Error('Timeout: '+expr); };
-const links = ['/now','/find','/calendar','/score','/alerts','/prepare','/mos','/plan','/social','/privacy','/terms','/ads','/status','/'];
+const links = ['/now','/find','/calendar','/calc','/alerts','/prepare','/mos','/plan','/social','/privacy','/terms','/about','/status','/'];
 const results = [];
 try {
   await send('Runtime.enable'); await send('Page.enable');
   await send('Emulation.setEmulatedMedia',{features:[]});
-  await send('Page.navigate',{url:'http://localhost:3100/'}); await until('!!document.querySelector(".topcard")');
+  await send('Page.navigate',{url:'http://localhost:3100/'}); await until('!!document.querySelector("h1")');
   for(const width of [320,390,820,1440]) {
     await send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:width<650}); await sleep(200);
     assert.equal(await evalJs('document.documentElement.scrollWidth>innerWidth'),false,'Home width '+width);
@@ -35,7 +35,7 @@ try {
     results.push('Internal link '+route);
   }
   await send('Fetch.enable',{patterns:[{urlPattern:'*/api/mos',requestStage:'Request'}]});
-  await evalJs(`document.querySelector('a[href="/mos"]').click()`);
+  await send('Page.navigate',{url:'http://localhost:3100/mos'});
   await until('!!document.querySelector(".feedback.loading")');
   assert(paused, 'API request intercepted only in test browser');
   results.push('Loading feedback');

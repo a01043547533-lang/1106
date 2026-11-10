@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { BranchBadge, MultiPicker, RateBar, n, useApi, mosHref } from '../components.jsx';
 import { MosSearch } from '../mos-search.jsx';
+import { itemParams } from '../lib/item-params.js';
 import { ExamTimeline } from '../exam-timeline.jsx';
 
 const num = (v) => (v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
@@ -67,11 +68,11 @@ export default function Calc() {
   const [items, setItems] = useState([]);
   const [sel, setSel] = useState({});
   // 상세는 자격 일부만 보내므로, 보유 자격 대조는 서버에서 이 특기(군 기준)의 전체 목록으로 한다
-  const match = useApi(mos && items.length ? `/api/mos/${encodeURIComponent(code)}/match?${new URLSearchParams({ branch: mos.branch, items: items.join(',') })}` : null);
+  const match = useApi(mos && items.length ? `/api/mos/${encodeURIComponent(code)}/match?${itemParams(items, { branch: mos.branch })}` : null);
   const matched = useMemo(() => (items.length ? (match.data?.items || []).map(n) : []), [match.data, items]);
 
   useEffect(() => { setSel({}); }, [code, branchParam]);
-  useEffect(() => { if (kinds.length && matched.length) setSel((s) => ({ ...autoPick(kinds, matched), ...Object.fromEntries(Object.entries(s).filter(([, v]) => v.manual)) })); }, [kinds, matched]);
+  useEffect(() => { setSel((s) => ({ ...autoPick(kinds, matched), ...Object.fromEntries(Object.entries(s).filter(([, v]) => v.manual)) })); }, [kinds, matched]);
 
   const choose = (kind, patch) => setSel((s) => ({ ...s, [kind]: { ...(s[kind] || { id: null, relation: '직접' }), ...patch, manual: true } }));
   const scoreOf = (k) => {
@@ -103,6 +104,8 @@ export default function Calc() {
         <h2>2. 가지고 있는 자격·면허·전공을 고르세요 <span className="muted small">(선택)</span></h2>
         <p className="muted small">이 특기의 지원 자격 목록과 대조해서 인정 등급(기사급·산업기사급 등)과 관련 구분(직접·간접)을 자동으로 맞춰요. 입력은 저장하지 않아요.</p>
         <MultiPicker value={items} onChange={setItems} />
+        {match.loading && <p role="status">보유 자격을 대조하고 있어요…</p>}
+        {match.error && <p role="alert">자격 대조에 실패했어요. 자동 점수는 제외했으니 잠시 후 다시 선택해 주세요.</p>}
         {items.length > 0 && match.data && (matched.length
           ? <p className="small">이 특기에서 인정되는 항목: {matched.map((m) => `${m.item}(${[m.level, m.relation].filter(Boolean).join(' · ')})`).join(', ')}</p>
           : <p className="small warn">선택한 자격은 이 특기의 지원 자격 목록에 없어요. 아래에서 직접 등급을 고르거나 다른 특기를 확인해 보세요.</p>)}
