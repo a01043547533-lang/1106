@@ -75,7 +75,7 @@ npm test
 - 빌드 후 `scripts/postbuild-seo.mjs`가 `dist/client/robots.txt`와 `sitemap.xml`(정적 라우트 + 가이드 글 + 특기 상세 전부)을 만듭니다. 사이트 주소는 `SITE_URL`, 없으면 Vercel의 `VERCEL_PROJECT_PRODUCTION_URL`을 씁니다. 둘 다 없으면 sitemap은 만들지 않습니다.
 - 화면은 라우트마다 title·description·canonical·OG 태그를 갱신합니다(`client/src/design.jsx`). `/status`, `/contact`, 404는 noindex입니다.
 - 화면에는 광고 자리를 두지 않습니다. `VITE_ADSENSE_CLIENT=ca-pub-…`가 빌드 환경변수에 있으면 `client/vite.config.js`가 AdSense 스크립트만 `<head>`에 넣습니다(심사 코드 겸 자동 광고). 승인 뒤 자동 광고를 켜거나, 원하는 위치에 광고 단위를 직접 추가합니다.
-- 승인 절차: ① 도메인 연결 후 `SITE_URL`·`VITE_SITE_URL`·`CONTACT_EMAIL` 설정 → ② AdSense에서 사이트 추가, 발급받은 게시자 ID를 `VITE_ADSENSE_CLIENT`로 넣고 재배포(심사 코드 삽입) → ③ 승인 후 AdSense가 알려 주는 `ads.txt` 한 줄을 `client/public/ads.txt`로 추가하고, AdSense에서 자동 광고를 켜서 재배포.
+- 승인 절차: ① 도메인 연결 후 `SITE_URL`·`VITE_SITE_URL`·`CONTACT_EMAIL` 설정 → ② AdSense에서 사이트 추가, 발급받은 게시자 ID를 `VITE_ADSENSE_CLIENT`로 넣고 재배포(심사 코드 삽입) → ③ 승인 후 AdSense에서 자동 광고를 켭니다. `ads.txt`는 빌드 때 `VITE_ADSENSE_CLIENT`로 자동 생성되고(`google.com, pub-…, DIRECT, f08c47fec0942fa0`), ID가 없으면 `/ads.txt`는 404입니다.
 - 서치콘솔·네이버 소유 확인은 `GOOGLE_SITE_VERIFICATION`, `NAVER_SITE_VERIFICATION` 값을 넣으면 메타 태그로 들어갑니다.
 
 ## 제공하지 않는 기능

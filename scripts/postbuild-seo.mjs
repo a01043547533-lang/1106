@@ -34,6 +34,16 @@ const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, 
 const robots = ['User-agent: *', 'Allow: /', 'Disallow: /api/', 'Disallow: /status', 'Disallow: /contact', site ? `Sitemap: ${site}/sitemap.xml` : '', ''].filter((l, i, a) => l !== '' || i === a.length - 1).join('\n');
 fs.writeFileSync(path.join(OUT, 'robots.txt'), robots);
 
+// ads.txt — AdSense 게시자 ID(VITE_ADSENSE_CLIENT=ca-pub-숫자)가 있으면 Google 표준 한 줄로 만든다.
+// ID가 없으면 만들지 않는다(그 주소는 404). 화면(HTML)이 ads.txt로 응답하면 AdSense가 잘못된 파일로 본다.
+const adsClient = (process.env.VITE_ADSENSE_CLIENT || '').trim();
+const adsFile = path.join(OUT, 'ads.txt');
+if (/^ca-pub-[0-9]+$/.test(adsClient)) {
+  const pub = adsClient.replace(/^ca-/, '');
+  fs.writeFileSync(adsFile, 'google.com, ' + pub + ', DIRECT, f08c47fec0942fa0' + String.fromCharCode(10));
+  console.log('[seo] ads.txt 생성 · ' + pub);
+} else if (fs.existsSync(adsFile)) fs.rmSync(adsFile);
+
 if (site) {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${esc(site + u.loc)}</loc><lastmod>${u.lastmod || today}</lastmod><changefreq>${u.changefreq}</changefreq><priority>${u.priority}</priority></url>`).join('\n')}\n</urlset>\n`;
   fs.writeFileSync(path.join(OUT, 'sitemap.xml'), xml);
