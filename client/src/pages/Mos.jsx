@@ -9,7 +9,7 @@ import { describeMos } from '../lib/describe.js';
 import { CompareToggle } from './Compare.jsx';
 import { enlistLabel, sourceLabel, sumJobfit } from './Jobfit.jsx';
 import { AddToCalendar, Forecast, OfficialApplyGuide, RateBar, Status, addMonths, fmtRate, monthLabel, n } from '../components.jsx';
-import { ExamTimeline } from '../exam-timeline.jsx';
+import { CertificateSection, ExamTimeline } from '../exam-timeline.jsx';
 
 export function MosIndex() {
   const idx = useRouteData('mosIndex', '/api/mos', (r) => r.items);
@@ -34,6 +34,7 @@ export function MosIndex() {
           </ul>
         </section>
       ))}
+      <CertificateSection intro="기술행정병 등 많은 특기가 관련 자격·면허·전공 중 하나를 요구하고, 자격 등급에 따라 배점이 달라져요. 특기 상세에서 인정 자격을 확인하고 시험 일정을 맞춰 보세요." />
     </>
   );
 }

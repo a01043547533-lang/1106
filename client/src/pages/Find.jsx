@@ -1,4 +1,5 @@
 import { PageHeading } from '../design.jsx';
+import { CertificateSection } from '../exam-timeline.jsx';
 // ★ 특기 찾기 — 내 신체조건·자격으로 갈 수 있는 특기. 입력은 서버에 저장되지 않는다.
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -103,6 +104,7 @@ export default function Find() {
           </details>
         )
       ))}
+      <CertificateSection intro={d && d.groups?.item?.length ? `「자격이 하나 부족해요」에 나온 ${d.groups.item.length}개 특기는 관련 자격·면허·전공 중 하나만 있으면 지원할 수 있어요. 따고 싶은 자격의 시험 일정을 확인해 보세요.` : '자격증·면허를 새로 따면 지원할 수 있는 특기와 배점이 늘어나요. 공식 사이트와 올해 시험 일정을 확인해 보세요.'} />
     </>
   );
 }

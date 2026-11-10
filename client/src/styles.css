@@ -301,6 +301,21 @@ th.num, td.num { text-align: right; white-space: nowrap; }
 .certificate-links strong { display: block; font-size: 17px; font-weight: 750; }
 .certificate-links small { display: block; margin-top: 2px; color: #e3c9bf; }
 .certificate-links > p { font-size: 14px; color: #e3c9bf; margin: 6px 0 0; }
+/* 밝은 카드 안에서 쓰는 자격증 도우미(홈의 짙은 띠용 색을 덮어쓴다) */
+.cert-light .certificate-helper { gap: 20px; }
+.cert-light .certificate-intro h2 { display: none; }
+.cert-light .certificate-intro p { font-size: 15px; color: var(--ink-2); margin: 0; }
+.cert-light .certificate-links > a { background: var(--white); border: 1px solid var(--line); color: var(--maroon); }
+.cert-light .certificate-links > a:hover { background: var(--peach); }
+.cert-light .certificate-links small { color: var(--muted); }
+.cert-light .certificate-links > p { color: var(--muted); }
+.cert-section { margin-top: 28px; }
+.exam-year { margin-top: 18px; }
+.exam-year .exam-title { margin: 0 0 6px; font-weight: 800; font-size: 17px; color: var(--maroon); }
+.exam-table td, .exam-table th { white-space: nowrap; }
+.exam-table td.cell-name { white-space: normal; }
+.exam-table tr.exam-done td { color: var(--muted); }
+.exam-table tr.exam-done .badge { opacity: .8; }
 
 .closing { text-align: center; padding-top: 110px; padding-bottom: 110px; }
 .closing h2 { font-size: clamp(28px, 3.6vw, 44px); margin-bottom: 8px; }
