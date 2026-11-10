@@ -78,49 +78,109 @@ export const isJobfitCode = (code) => {
 // 특기 전체 목록 (군사특기 정보 + 접수현황에 나온 특기를 합친다). 사이트맵과 /mos 목록이 쓴다.
 export function mosIndex() {
   const map = new Map();
+  const key = (b, c) => `${normBranch(b)}|${c}`;
   for (const it of repo.getDataset('mos').items) {
     const n = norm(it);
     if (!n.mosCode) continue;
-    map.set(n.mosCode, { mosCode: n.mosCode, mosName: n.mosName, branch: n.branch, category: n.category });
+    map.set(key(n.branch, n.mosCode), { mosCode: n.mosCode, mosName: n.mosName, branch: normBranch(n.branch), category: n.category });
   }
   for (const s of repo.latestSnapshots()) {
-    if (!s.mosCode || map.has(s.mosCode)) continue;
-    map.set(s.mosCode, { mosCode: s.mosCode, mosName: s.mosName, branch: s.branch, category: s.category });
+    if (!s.mosCode || map.has(key(s.branch, s.mosCode))) continue;
+    map.set(key(s.branch, s.mosCode), { mosCode: s.mosCode, mosName: s.mosName, branch: normBranch(s.branch), category: s.category });
   }
   for (const r of [...repo.getJobfit().items, ...repo.getPreparedJobfit().items]) {
-    if (!r.mosCode || map.has(r.mosCode)) continue;
-    map.set(r.mosCode, { mosCode: r.mosCode, mosName: r.mosName, branch: r.branch, category: '취업맞춤특기병' });
+    if (!r.mosCode || map.has(key(r.branch, r.mosCode))) continue;
+    map.set(key(r.branch, r.mosCode), { mosCode: r.mosCode, mosName: r.mosName, branch: normBranch(r.branch), category: '취업맞춤특기병' });
   }
+  // 같은 코드가 여러 군에 있으면 표시해 둔다(화면·사이트맵이 군까지 넣은 주소를 쓰게)
+  const count = {}; for (const m of map.values()) count[m.mosCode] = (count[m.mosCode] || 0) + 1;
+  for (const m of map.values()) m.shared = count[m.mosCode] > 1;
   return [...map.values()].sort((a, b) =>
     String(a.branch).localeCompare(String(b.branch), 'ko') || String(a.mosName).localeCompare(String(b.mosName), 'ko'));
 }
 
-export function mosDetail(mosCode) {
-  const mos = byMos(repo.getDataset('mos').items, mosCode)[0] || null;
-  const snapshots = repo.latestSnapshots().filter((s) => s.mosCode === mosCode);
+// 특기 코드는 군마다 따로 매겨져 같은 코드가 여러 군에 있다(예: 46 = 해군 건축·토목 / 공군 비파괴검사병).
+// 그래서 특기는 「군 + 코드」로 찾는다. 자격 자료는 해병대를 「해병」으로 적어 표기를 맞춘다.
+export const normBranch = (b) => (b === '해병' ? '해병대' : b || null);
+const ELIG_LIMIT = 150; // 화면은 80개만 보여 주므로 여유 있게. 4.5MB(Vercel 응답 한도)를 넘던 특기(901 등)가 있었다.
+const KIND_ORDER = { 자격: 0, 면허: 1, 전공: 2 };
+const branchCache = new Map();
+export function branchesOfCode(code) {
+  if (branchCache.has(code)) return branchCache.get(code);
+  const set = new Set();
+  for (const it of repo.getDataset('mos').items) if (norm(it).mosCode === code) set.add(normBranch(norm(it).branch));
+  for (const r of repo.latestSnapshots()) if (r.mosCode === code) set.add(normBranch(r.branch));
+  for (const r of [...repo.getJobfit().items, ...repo.getPreparedJobfit().items]) if (r.mosCode === code) set.add(normBranch(r.branch));
+  // 여러 군 여부는 실제 특기 자료로만 판단한다. 자격 자료에만 다른 군의 같은 코드가 있는 경우가 있어(36·43 등), 그걸로 판단하면 목록과 상세가 어긋난다.
+  set.delete(null);
+  const list = [...set].sort((a, b) => a.localeCompare(b, 'ko'));
+  branchCache.set(code, list);
+  return list;
+}
+// 한 군의 인정 자격 전체(중복 항목 제거). 상세는 일부만, 대조(match)는 전체를 쓴다.
+function eligibilityOf(code, branch) {
+  const seen = new Map();
+  for (const e of repo.getEligibleByMos().get(code) || []) { const x = e._norm; if (normBranch(x.branch) !== branch || !x.item || seen.has(x.item)) continue; seen.set(x.item, e); }
+  return [...seen.values()].sort((a, b) => (KIND_ORDER[a._norm.kind] ?? 9) - (KIND_ORDER[b._norm.kind] ?? 9) || String(a._norm.item).localeCompare(String(b._norm.item), 'ko'));
+}
+export function mosMatch(code, branch, items) {
+  const want = new Set(items);
+  const b = normBranch(branch) || branchesOfCode(code)[0];
+  return { mosCode: code, branch: b, items: eligibilityOf(code, b).filter((e) => want.has(e._norm.item)) };
+}
+// 회차별 마감 지원률. final_rates.json에는 군이 없어서, 여러 군이 쓰는 코드는 군 정보가 있는 접수 기록으로 다시 계산한다.
+function finalRatesOf(code, branch, shared) {
+  if (!shared) return repo.getFinalRates().filter((f) => f.mosCode === code);
+  const by = new Map();
+  for (const r of repo.getSnapshots()) {
+    if (r.mosCode !== code || normBranch(r.branch) !== branch || !r.roundLabel) continue;
+    const g = by.get(r.roundLabel) || { quota: 0, applicants: 0 };
+    g.quota += Number(r.quota) || 0; g.applicants += Number(r.applicants) || 0; by.set(r.roundLabel, g);
+  }
+  return [...by.entries()].filter(([, g]) => g.quota > 0).map(([roundLabel, g]) => ({ roundLabel, mosCode: code, rate: Math.round((g.applicants / g.quota) * 100) / 100, source: 'snapshots' }));
+}
+export function mosDetail(mosCode, branchParam = null) {
+  const branches = branchesOfCode(mosCode);
+  if (!branches.length) return null;
+  const want = normBranch(branchParam);
+  if (want && !branches.includes(want)) return null;
+  // 군을 안 정했는데 여러 군이 쓰는 코드면 고르게 한다(섞어 보여 주지 않는다)
+  if (!want && branches.length > 1) {
+    const choices = branches.map((b) => { const m = repo.getDataset('mos').items.map(norm).find((x) => x.mosCode === mosCode && normBranch(x.branch) === b); const sn = repo.latestSnapshots().find((r) => r.mosCode === mosCode && normBranch(r.branch) === b); const el = (repo.getEligibleByMos().get(mosCode) || []).find((e) => normBranch(e._norm.branch) === b); return { branch: b, mosName: m?.mosName || sn?.mosName || el?._norm.mosName || mosCode, category: m?.category || sn?.category || null }; });
+    return { ambiguous: true, mosCode, branches, choices };
+  }
+  const branch = want || branches[0];
+  const shared = branches.length > 1;
+  const mos = repo.getDataset('mos').items.find((it) => norm(it).mosCode === mosCode && normBranch(norm(it).branch) === branch) || null;
+  const snapshots = repo.latestSnapshots().filter((s) => s.mosCode === mosCode && normBranch(s.branch) === branch);
   const day = today();
   // 실시간 자료에서 빠진 특기(입영일이 모두 지난 경우 등)는 저장된 기준자료로 보여 주고 출처도 그렇게 표시한다.
   let jf = repo.getJobfit();
-  if (jf.source === 'api' && !jf.items.some((r) => r.mosCode === mosCode)) jf = repo.getPreparedJobfit();
-  const jobfit = jf.items.filter((r) => r.mosCode === mosCode).map((r) => jobfitRow(r, day))
-    .sort((a, b) => String(a.enlistDate).localeCompare(String(b.enlistDate)));
-  if (!mos && !snapshots.length && !jobfit.length) return null;
+  const mine = (r) => r.mosCode === mosCode && normBranch(r.branch) === branch;
+  if (jf.source === 'api' && !jf.items.some(mine)) jf = repo.getPreparedJobfit();
+  const jobfit = jf.items.filter(mine).map((r) => jobfitRow(r, day)).sort((a, b) => String(a.enlistDate).localeCompare(String(b.enlistDate)));
+  const elig = eligibilityOf(mosCode, branch);
+  if (!mos && !snapshots.length && !jobfit.length && !elig.length) return null;
   const n = norm(mos);
   const snap = [...snapshots].sort((a, b) => String(b.collectedAt).localeCompare(String(a.collectedAt)))[0] || null;
-  const branch = n.branch || snap?.branch || jobfit[0]?.branch || null;
   const term = repo.getServiceTerms().find((t) => t.branch === branch && /현역|병/.test(t.type || '')) || null;
+  const kinds = {}; for (const e of elig) kinds[e._norm.kind || '기타'] = (kinds[e._norm.kind || '기타'] || 0) + 1;
+  const otherNames = elig[0]?._norm.mosName;
   return {
     mosCode,
-    mosName: n.mosName || snap?.mosName || jobfit[0]?.mosName || mosCode,
+    mosName: n.mosName || snap?.mosName || jobfit[0]?.mosName || otherNames || mosCode,
     branch,
+    branches,
     category: n.category || snap?.category || (jobfit.length ? '취업맞춤특기병' : null),
     jobfit,
     jobfitFetchedAt: jobfit.length ? jf.fetchedAt : null,
     jobfitSource: jobfit.length ? jf.source : null,
     mos,
-    eligibility: repo.getEligibleByMos().get(mosCode) || [],
-    documents: byMos(repo.getDataset('docs').items, mosCode),
-    finalRates: repo.getFinalRates().filter((f) => f.mosCode === mosCode),
+    eligibility: elig.slice(0, ELIG_LIMIT),
+    eligibilityTotal: elig.length,
+    eligibilityKinds: kinds,
+    documents: repo.getDataset('docs').items.filter((it) => norm(it).mosCode === mosCode && normBranch(norm(it).branch) === branch),
+    finalRates: finalRatesOf(mosCode, branch, shared),
     snapshots,
     snapshot: snap,
     forecast: snap ? forecastFor(snap) : null,

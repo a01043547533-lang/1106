@@ -26,7 +26,8 @@ export function RouteExperience() {
       const title = home ? '입대타이밍 · 모집병 지원률과 모집 일정' : `${h1 || '페이지 안내'} | 입대타이밍`;
       const lead = main?.querySelector('.page-heading .lead, .hero-lead, article p.lead')?.textContent?.trim();
       const description = (lead || '병무청 공공데이터로 모집병 접수현황, 지원률, 특기별 지원 조건, 모집 일정을 확인하세요.').slice(0, 160);
-      const canonical = siteUrl + (home ? '/' : location.pathname.replace(/\/$/, ''));
+      const br = location.pathname.startsWith('/mos/') ? new URLSearchParams(location.search).get('branch') : null;
+      const canonical = siteUrl + (home ? '/' : location.pathname.replace(/\/$/, '')) + (br ? `?branch=${encodeURIComponent(br)}` : '');
       const noindex = /^\/(status|contact)$/.test(location.pathname) || Boolean(h1 && h1.includes('찾을 수 없어요'));
       document.title = title;
       setMeta('meta', 'name', 'description', 'content', description);
@@ -47,6 +48,6 @@ export function RouteExperience() {
     const remember = () => positions.current.set(location.key, window.scrollY);
     window.addEventListener('scroll', remember, { passive: true });
     return () => { observer.disconnect(); window.removeEventListener('scroll', remember); };
-  }, [location.key, location.pathname, navigation]);
+  }, [location.key, location.pathname, location.search, navigation]);
   return null;
 }

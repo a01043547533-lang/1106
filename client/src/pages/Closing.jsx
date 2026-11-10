@@ -2,7 +2,7 @@ import { PageHeading } from '../design.jsx';
 // 마감 임박 미달 보드 — 접수 중인 특기 가운데 곧 마감되고 지원률이 1.0 미만인 것만 모은다.
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AddToCalendar, BranchBadge, Countdown, Forecast, OfficialApplyLink, RateBar, Status, monthLabel, useApi } from '../components.jsx';
+import { AddToCalendar, BranchBadge, Countdown, Forecast, OfficialApplyLink, RateBar, Status, monthLabel, useApi, mosHref } from '../components.jsx';
 
 const WINDOWS = [[24, '24시간 이내'], [48, '48시간 이내'], [168, '7일 이내'], [0, '접수 중 전체']];
 const endTime = (v) => (v ? Date.parse(String(v).length === 10 ? `${v}T23:59:59+09:00` : /(?:Z|[+-]\d\d:\d\d)$/.test(v) ? v : `${v}+09:00`) : NaN);
@@ -41,9 +41,9 @@ export default function Closing() {
         <tbody>
           {rows.map((s) => {
             const short = (s.quota ?? 0) - (s.applicants ?? 0);
-            const ev = { uid: `close-${s.branch}-${s.mosCode}-${s.roundLabel}-${s.unit}`, title: `${s.branch} ${s.mosName} 접수 마감`, start: String(s.applyEnd).slice(0, 10), description: `${s.category || ''} ${s.roundLabel ? s.roundLabel + '회차' : ''} · 접수기간 ${s.applyStart || '?'} ~ ${s.applyEnd} · 지원은 병무청에서`, url: `${window.location.origin}/mos/${encodeURIComponent(s.mosCode)}` };
+            const ev = { uid: `close-${s.branch}-${s.mosCode}-${s.roundLabel}-${s.unit}`, title: `${s.branch} ${s.mosName} 접수 마감`, start: String(s.applyEnd).slice(0, 10), description: `${s.category || ''} ${s.roundLabel ? s.roundLabel + '회차' : ''} · 접수기간 ${s.applyStart || '?'} ~ ${s.applyEnd} · 지원은 병무청에서`, url: `${window.location.origin}${mosHref(s.mosCode, s.branch)}` };
             return <tr key={`${s.branch}-${s.mosCode}-${s.unit}-${s.enlistMonth}-${s.roundLabel}`}>
-              <td className="cell-name"><BranchBadge branch={s.branch} /> <Link to={`/mos/${encodeURIComponent(s.mosCode)}`}><b>{s.mosName}</b></Link><div className="muted small">{[s.category, s.unit, s.roundLabel && `${s.roundLabel}회차`].filter(Boolean).join(' · ')}</div></td>
+              <td className="cell-name"><BranchBadge branch={s.branch} /> <Link to={mosHref(s.mosCode, s.branch)}><b>{s.mosName}</b></Link><div className="muted small">{[s.category, s.unit, s.roundLabel && `${s.roundLabel}회차`].filter(Boolean).join(' · ')}</div></td>
               <td className="cell-sub">{monthLabel(s.enlistMonth)}</td>
               <td className="num" data-label="모집 / 접수">{s.quota} / {s.applicants}</td>
               <td className="num" data-label="부족 인원">{short > 0 ? <b className="short">{short}명</b> : <span className="muted">-</span>}</td>

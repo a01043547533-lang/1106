@@ -24,6 +24,20 @@ const { app } = await import('../server/app.js');
 const { clientIp, requestLimit } = await import('../server/rate-limit.js');
 const { describeFailure } = await import('../server/live.js');
 const { normalizeExamRows } = await import('../server/exam-api.js');
+const q = await import('../server/queries.js');
+
+test('특기: 같은 코드를 여러 군이 쓰면 섞지 않고, 응답은 Vercel 한도(4.5MB)보다 훨씬 작다', () => {
+  const amb = q.mosDetail('46');
+  assert.equal(amb.ambiguous, true); assert.deepEqual(amb.branches, ['공군', '해군']);
+  const air = q.mosDetail('46', '공군'); const navy = q.mosDetail('46', '해군');
+  assert.equal(air.mosName, '비파괴검사병'); assert.equal(navy.mosName, '건축/토목');
+  assert(air.eligibility.every((e) => q.normBranch(e._norm.branch) === '공군'));
+  assert.equal(q.mosDetail('46', '육군'), null);
+  const big = q.mosDetail('901', '해병대'); // 예전 4.81MB
+  assert(JSON.stringify(big).length < 1024 * 1024 && big.eligibility.length <= 150 && big.eligibilityTotal > 20000);
+  assert(q.mosMatch('46', '공군', ['방사선비파괴검사기능사']).items.length === 1);
+  const idx = q.mosIndex(); assert(idx.filter((m) => m.mosCode === '46').length === 2 && idx.find((m) => m.mosCode === '46').shared);
+});
 
 test('국가기술자격 일정: 정기·빈자리 행을 한 회차로 합치고 상시는 뺀다', () => {
   const rows = [

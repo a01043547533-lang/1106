@@ -142,10 +142,10 @@ app.get('/api/mos/search', (req, res) => {
       if (vision) { if (n.visionMin == null) unknown.push('시력'); else if (vision < n.visionMin) reasons.push(`시력 기준 미달(교정 ${n.visionMin} 이상)`); }
       if (grade) { if (n.gradeMax == null) unknown.push('신체등급'); else if (grade > n.gradeMax) reasons.push(`신체등급 기준 미달(${n.gradeMax}급 이내)`); }
 
-      const need = (eligByMos.get(n.mosCode) || []).map((e) => norm(e).item).filter(Boolean);
+      const need = (eligByMos.get(n.mosCode) || []).filter((e) => q.normBranch(norm(e).branch) === q.normBranch(n.branch)).map((e) => norm(e).item).filter(Boolean);
       const anyItemOk = !need.length || need.some((x) => items.has(x));
       const missing = !anyItemOk ? need.slice(0, 3) : [];
-      const snap = latest.find((s) => s.mosCode === n.mosCode && s.branch === n.branch);
+      const snap = latest.find((s) => s.mosCode === n.mosCode && q.normBranch(s.branch) === q.normBranch(n.branch));
 
       let group = 'ok';
       if (reasons.length) group = 'physical';
@@ -170,8 +170,11 @@ app.get('/api/mos/search', (req, res) => {
 
 app.get('/api/mos', (req, res) => send(res, { items: q.mosIndex() }));
 
+// 보유 자격과 이 특기(군 기준)의 인정 자격 대조. 상세는 일부만 보내므로 계산기는 이걸로 전체를 대조한다.
+app.get('/api/mos/:mosCode/match', (req, res) => send(res, q.mosMatch(req.params.mosCode, req.query.branch || null, list(req.query.items).slice(0, 50))));
+
 app.get('/api/mos/:mosCode', (req, res) => {
-  const d = q.mosDetail(req.params.mosCode);
+  const d = q.mosDetail(req.params.mosCode, req.query.branch || null);
   if (!d) return res.status(404).json({ error: '특기를 찾을 수 없어요', mosCode: req.params.mosCode });
   send(res, d);
 });

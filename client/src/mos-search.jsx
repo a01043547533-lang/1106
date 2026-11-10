@@ -8,7 +8,7 @@ export function MosSearch({ onPick, exclude = [], placeholder = '특기 이름�
   const [q, setQ] = useState('');
   const list = idx.data?.items || [];
   const term = q.trim().toLowerCase();
-  const hits = term ? list.filter((m) => !exclude.includes(m.mosCode) && [m.mosName, m.mosCode, m.category, m.branch].filter(Boolean).some((v) => String(v).toLowerCase().includes(term))).slice(0, 12) : [];
+  const hits = term ? list.filter((m) => !exclude.includes(m.mosCode) && !exclude.includes(`${m.mosCode}@${m.branch}`) && [m.mosName, m.mosCode, m.category, m.branch].filter(Boolean).some((v) => String(v).toLowerCase().includes(term))).slice(0, 12) : [];
   return <div className="mos-search">
     <label htmlFor={id}>{label}</label>
     <input id={id} value={q} onChange={(e) => setQ(e.target.value)} placeholder={idx.loading ? '특기 목록을 불러오는 중…' : placeholder} disabled={idx.loading} autoComplete="off" />

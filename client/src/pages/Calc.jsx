@@ -3,7 +3,7 @@ import { PageHeading } from '../design.jsx';
 // 보유 자격을 고르면 이 특기에서 인정되는 등급·관련 구분을 찾아 자동으로 맞춰 준다. 입력은 저장하지 않는다.
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { BranchBadge, MultiPicker, RateBar, n, useApi } from '../components.jsx';
+import { BranchBadge, MultiPicker, RateBar, n, useApi, mosHref } from '../components.jsx';
 import { MosSearch } from '../mos-search.jsx';
 import { ExamTimeline } from '../exam-timeline.jsx';
 
@@ -56,21 +56,21 @@ function autoPick(kinds, matched) {
 export default function Calc() {
   const [params, setParams] = useSearchParams();
   const code = params.get('mos') || '';
+  const branchParam = params.get('branch') || '';
   const idx = useApi('/api/mos');
-  const mos = useMemo(() => (idx.data?.items || []).find((m) => m.mosCode === code) || null, [idx.data, code]);
-  const detail = useApi(code ? `/api/mos/${encodeURIComponent(code)}` : null);
+  const mos = useMemo(() => (idx.data?.items || []).find((m) => m.mosCode === code && (!branchParam || m.branch === branchParam)) || null, [idx.data, code, branchParam]);
+  const detail = useApi(mos ? `/api/mos/${encodeURIComponent(code)}?branch=${encodeURIComponent(mos.branch)}` : null);
   const rulesUrl = mos ? `/api/score-rules?${new URLSearchParams({ branch: mos.branch || '', mosCode: mos.mosCode, category: mos.category || '' })}` : null;
   const rules = useApi(rulesUrl);
   const special = Boolean(mos?.category && /전문특기/.test(mos.category));
   const kinds = useMemo(() => buildKinds(rules.data?.items || [], special), [rules.data, special]);
   const [items, setItems] = useState([]);
   const [sel, setSel] = useState({});
-  const matched = useMemo(() => {
-    const want = new Set(items);
-    return (detail.data?.eligibility || []).map(n).filter((e) => want.has(e.item));
-  }, [detail.data, items]);
+  // 상세는 자격 일부만 보내므로, 보유 자격 대조는 서버에서 이 특기(군 기준)의 전체 목록으로 한다
+  const match = useApi(mos && items.length ? `/api/mos/${encodeURIComponent(code)}/match?${new URLSearchParams({ branch: mos.branch, items: items.join(',') })}` : null);
+  const matched = useMemo(() => (items.length ? (match.data?.items || []).map(n) : []), [match.data, items]);
 
-  useEffect(() => { setSel({}); }, [code]);
+  useEffect(() => { setSel({}); }, [code, branchParam]);
   useEffect(() => { if (kinds.length && matched.length) setSel((s) => ({ ...autoPick(kinds, matched), ...Object.fromEntries(Object.entries(s).filter(([, v]) => v.manual)) })); }, [kinds, matched]);
 
   const choose = (kind, patch) => setSel((s) => ({ ...s, [kind]: { ...(s[kind] || { id: null, relation: '직접' }), ...patch, manual: true } }));
@@ -95,15 +95,15 @@ export default function Calc() {
       </ol>
       <section className="card">
         <h2>1. 어느 특기의 배점을 볼까요</h2>
-        {mos ? <p className="calc-picked"><BranchBadge branch={mos.branch} /> <b>{mos.mosName}</b> <span className="muted small">{[mos.category, mos.mosCode].filter(Boolean).join(' · ')}</span> <button type="button" className="link" onClick={() => setParams({})}>다른 특기 고르기</button> · <Link to={`/mos/${encodeURIComponent(mos.mosCode)}`}>특기 상세</Link></p>
-          : <MosSearch onPick={(m) => setParams({ mos: m.mosCode })} />}
+        {mos ? <p className="calc-picked"><BranchBadge branch={mos.branch} /> <b>{mos.mosName}</b> <span className="muted small">{[mos.category, mos.mosCode].filter(Boolean).join(' · ')}</span> <button type="button" className="link" onClick={() => setParams({})}>다른 특기 고르기</button> · <Link to={mosHref(mos.mosCode, mos.shared ? mos.branch : null)}>특기 상세</Link></p>
+          : <MosSearch onPick={(m) => setParams({ mos: m.mosCode, ...(m.shared ? { branch: m.branch } : {}) })} />}
         {code && idx.data && !mos && <p className="muted" role="alert">특기 코드 {code}를 찾을 수 없어요. 다시 검색해 주세요.</p>}
       </section>
       {mos && <section className="card">
         <h2>2. 가지고 있는 자격·면허·전공을 고르세요 <span className="muted small">(선택)</span></h2>
         <p className="muted small">이 특기의 지원 자격 목록과 대조해서 인정 등급(기사급·산업기사급 등)과 관련 구분(직접·간접)을 자동으로 맞춰요. 입력은 저장하지 않아요.</p>
         <MultiPicker value={items} onChange={setItems} />
-        {items.length > 0 && detail.data && (matched.length
+        {items.length > 0 && match.data && (matched.length
           ? <p className="small">이 특기에서 인정되는 항목: {matched.map((m) => `${m.item}(${[m.level, m.relation].filter(Boolean).join(' · ')})`).join(', ')}</p>
           : <p className="small warn">선택한 자격은 이 특기의 지원 자격 목록에 없어요. 아래에서 직접 등급을 고르거나 다른 특기를 확인해 보세요.</p>)}
       </section>}

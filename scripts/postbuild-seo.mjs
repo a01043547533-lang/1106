@@ -19,7 +19,7 @@ const { GUIDES } = await import(path.join(ROOT, 'client/src/lib/guide-list.js').
 let mosCodes = [];
 try {
   const { mosIndex } = await import(path.join(ROOT, 'server/queries.js').replace(/\\/g, '/').replace(/^([A-Za-z]):/, 'file:///$1:'));
-  mosCodes = mosIndex().map((m) => m.mosCode).filter(Boolean);
+  mosCodes = mosIndex().filter((m) => m.mosCode).map((m) => (m.shared ? `${encodeURIComponent(m.mosCode)}?branch=${encodeURIComponent(m.branch)}` : encodeURIComponent(m.mosCode)));
 } catch (error) {
   console.warn('[seo] 특기 목록을 읽지 못해 사이트맵에서 /mos/* 를 뺐어요:', error.message);
 }
@@ -27,7 +27,7 @@ try {
 const urls = [
   ...STATIC.map((p) => ({ loc: p, changefreq: p === '/' || p === '/now' ? 'hourly' : p.startsWith('/guide') ? 'monthly' : 'daily', priority: p === '/' ? '1.0' : '0.8' })),
   ...GUIDES.map((g) => ({ loc: `/guide/${g.slug}`, lastmod: g.updated, changefreq: 'monthly', priority: '0.7' })),
-  ...mosCodes.map((code) => ({ loc: `/mos/${encodeURIComponent(code)}`, changefreq: 'daily', priority: '0.6' })),
+  ...mosCodes.map((code) => ({ loc: `/mos/${code}`, changefreq: 'daily', priority: '0.6' })),
 ];
 
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

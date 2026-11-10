@@ -14,4 +14,6 @@ if (prod) {
   const vite = await createServer({ configFile: path.join(ROOT_DIR, 'client/vite.config.js'), server: { middlewareMode: true }, appType: 'spa' });
   app.use(vite.middlewares);
 }
-app.listen(PORT, () => console.log(`[server] http://localhost:${PORT} (React + API, ${prod ? 'production' : 'development'})`));
+// 이 PC 안에서만 열리게 한다(같은 네트워크의 다른 기기에서 개발 서버에 접근하지 못하게). 필요하면 HOST=0.0.0.0으로 연다.
+const HOST = process.env.HOST || '127.0.0.1';
+app.listen(PORT, HOST, () => console.log(`[server] http://localhost:${PORT} (React + API, ${prod ? 'production' : 'development'}, ${HOST}에서만 접속 가능)`));

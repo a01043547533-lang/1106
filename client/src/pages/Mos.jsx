@@ -1,14 +1,14 @@
 import { PageHeading } from '../design.jsx';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useReveal } from '../motion.jsx';
 // 특기 목록 + 특기 상세 — 검색 유입의 주력
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { MosSearch } from '../mos-search.jsx';
 import { useRouteData } from '../data.jsx';
 import { describeMos } from '../lib/describe.js';
 import { CompareToggle } from './Compare.jsx';
 import { enlistLabel, sourceLabel, sumJobfit } from './Jobfit.jsx';
-import { AddToCalendar, Forecast, OfficialApplyGuide, RateBar, Status, addMonths, fmtRate, monthLabel, n } from '../components.jsx';
+import { AddToCalendar, Forecast, OfficialApplyGuide, RateBar, Status, addMonths, fmtRate, monthLabel, n, mosHref, calcHref, compareKey, BranchBadge } from '../components.jsx';
 import { CertificateSection, ExamTimeline } from '../exam-timeline.jsx';
 
 export function MosIndex() {
@@ -21,7 +21,7 @@ export function MosIndex() {
     <>
       <PageHeading title="모집병 특기 전체 목록" description="특기를 누르면 신체조건, 지원 자격·면허·전공, 회차별 경쟁률을 볼 수 있어요." />
       <section className="card mos-index-tools">
-        <MosSearch onPick={(m) => navigate(`/mos/${encodeURIComponent(m.mosCode)}`)} label="특기 이름·코드로 바로 찾기" />
+        <MosSearch onPick={(m) => navigate(mosHref(m.mosCode, m.shared ? m.branch : null))} label="특기 이름·코드로 바로 찾기" />
         {names.length > 1 && <p className="jump small">바로가기: {names.map((b) => <a key={b} href={`#branch-${b}`}>{b} ({groups[b].length})</a>)}</p>}
         <p className="muted small">내 신체조건·자격으로 거르려면 <Link to="/find">특기 찾기</Link>, 후보를 나란히 보려면 <Link to="/compare">비교함</Link>을 쓰세요.</p>
       </section>
@@ -30,7 +30,7 @@ export function MosIndex() {
         <section key={branch} className="card" id={`branch-${branch}`}>
           <h2>{branch} 모집병 특기 <span className="muted">({list.length})</span></h2>
           <ul className="cols">
-            {list.map((m) => <li key={`${m.mosCode}-${m.category}`}><Link to={`/mos/${encodeURIComponent(m.mosCode)}`}>{m.mosName}</Link>{m.category && <span className="muted small"> · {m.category}</span>}</li>)}
+            {list.map((m) => <li key={`${m.branch}-${m.mosCode}-${m.category}`}><Link to={mosHref(m.mosCode, m.shared ? m.branch : null)}>{m.mosName}</Link>{m.category && <span className="muted small"> · {m.category}</span>}</li>)}
           </ul>
         </section>
       ))}
@@ -74,9 +74,19 @@ function RateChart({ rates }) {
 
 export function MosDetail() {
   const { code } = useParams();
-  const st = useRouteData('mos', `/api/mos/${encodeURIComponent(code)}`);
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const branchParam = params.get('branch') || '';
+  const st = useRouteData('mos', `/api/mos/${encodeURIComponent(code)}${branchParam ? `?branch=${encodeURIComponent(branchParam)}` : ''}`);
   const d = st.value;
-  if (!d) return <><PageHeading title="특기 정보" /><Status state={st} empty={!st.loading && !st.error ? '특기를 찾을 수 없어요' : null} /></>;
+  // 군이 하나뿐인 코드인데 주소에 군이 붙어 있으면 대표 주소로 바꾼다(같은 페이지가 여러 주소로 잡히지 않게)
+  useEffect(() => { if (d && !d.ambiguous && branchParam && (d.branches || []).length <= 1) navigate(`/mos/${encodeURIComponent(code)}`, { replace: true }); }, [d, branchParam, code, navigate]);
+  if (!d) return <><PageHeading title="특기 정보" /><Status state={st} empty={!st.loading && !st.error ? '특기를 찾을 수 없어요. 주소의 특기 코드나 군을 확인해 주세요.' : null} /></>;
+  if (d.ambiguous) return <>
+    <nav className="crumb" aria-label="위치"><Link to="/">입대타이밍</Link> › <Link to="/mos">특기 목록</Link> › 특기코드 {d.mosCode}</nav>
+    <PageHeading title={`특기코드 ${d.mosCode}은 여러 군에 있어요`} description="특기 코드는 군마다 따로 매겨져서 같은 코드가 다른 군의 다른 특기를 가리켜요. 보려는 특기를 골라 주세요." />
+    <ul className="cards">{d.choices.map((c) => <li key={c.branch} className="mcard"><Link to={mosHref(d.mosCode, c.branch)}><BranchBadge branch={c.branch} /> <b>{c.mosName}</b></Link><div className="muted small">{c.category || ''}</div></li>)}</ul>
+  </>;
   const m = n(d.mos);
   const s = d.snapshot;
   const paragraphs = describeMos(d);
@@ -93,7 +103,8 @@ export function MosDetail() {
       <PageHeading title={`${d.mosName} 경쟁률·지원자격`} eyebrow="특기 자세히 보기" />
       <p className="muted">{[d.branch, d.category].filter(Boolean).join(' · ')} 모집병</p>
       {paragraphs.map((p) => <p key={p} className="lead">{p}</p>)}
-      <p className="mos-tools"><CompareToggle code={d.mosCode} /> <Link className="cal-ics" to={`/calc?mos=${encodeURIComponent(d.mosCode)}`}>예상 배점 계산하기</Link></p>
+      {d.branches?.length > 1 && <p className="warn small">특기코드 {d.mosCode}은 {d.branches.filter((b) => b !== d.branch).map((b) => <Link key={b} to={mosHref(d.mosCode, b)}>{b}</Link>).reduce((a, x, i) => (i ? [...a, ', ', x] : [x]), [])}에도 있어요. 이 페이지는 <b>{d.branch}</b> 특기만 보여 줘요.</p>}
+      <p className="mos-tools"><CompareToggle code={compareKey(d.mosCode, d.branches?.length > 1 ? d.branch : null)} /> <Link className="cal-ics" to={calcHref(d.mosCode, d.branches?.length > 1 ? d.branch : null)}>예상 배점 계산하기</Link></p>
 
       <OfficialApplyGuide specialty={d} snapshot={s} />
 
@@ -141,6 +152,7 @@ export function MosDetail() {
           <tr><th>면접</th><td>{interview}</td></tr>
         </tbody></table>
         <h3>자격·면허·전공</h3>
+        {d.eligibilityTotal > 0 && <p className="muted small">인정 항목 {d.eligibilityTotal.toLocaleString()}종{d.eligibilityKinds ? ` (${Object.entries(d.eligibilityKinds).map(([k, v]) => `${k} ${v.toLocaleString()}`).join(' · ')})` : ''}{d.eligibilityTotal > 80 ? ' · 아래는 자격·면허부터 80개만 보여 줘요. 내 자격이 인정되는지는 예상 배점 계산기에서 확인하세요.' : ''}</p>}
         {s?.applyEnd && d.eligibility.length > 0 && <ExamTimeline deadline={s.applyEnd} compact />}
         {d.eligibility.length ? (
           <ul className="cols">{d.eligibility.slice(0, 80).map((e, i) => { const x = n(e); return <li key={`${x.item}-${i}`}>{x.item} <span className="muted small">{[x.kind, x.level?.trim(), x.relation].filter(Boolean).join('·')}</span></li>; })}</ul>

@@ -11,7 +11,7 @@ const initial = { path: null, data: {}, meta: { publicConfig: { subscriptionsEna
 const tree = (
   <React.StrictMode>
     <DataContext.Provider value={initial}>
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <BrowserRouter>
         <App />
         {typeof location !== 'undefined' && !/^(localhost|127.|0.0.0.0|[::1])/.test(location.hostname) && <Analytics />}
       </BrowserRouter>

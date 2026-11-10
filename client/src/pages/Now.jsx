@@ -3,7 +3,7 @@ import { HoverSummary, useRowMotion } from '../motion.jsx';
 import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useRouteData } from '../data.jsx';
-import { AddToCalendar, BranchBadge, OfficialApplyLink, RateBar, RulesBox, Status, dday, monthLabel, useApi } from '../components.jsx';
+import { AddToCalendar, BranchBadge, OfficialApplyLink, RateBar, RulesBox, Status, dday, monthLabel, useApi, mosHref } from '../components.jsx';
 import { MMA_PLANS_URL } from '../lib/official.js';
 
 const BRANCHES = ['전체', '육군', '해군', '공군', '해병대'];
@@ -99,7 +99,7 @@ export default function Now() {
             <tbody>
               {rows.map((s, index) => (
                 <tr data-summary={index} key={`${s.branch}-${s.mosCode}-${s.unit}-${s.enlistMonth}`}>
-                  <td className="cell-name"><Link to={`/mos/${encodeURIComponent(s.mosCode)}`}>{s.mosName}</Link><div className="muted small">{s.branch}{s.unit ? ` · ${s.unit}` : ''}</div></td>
+                  <td className="cell-name"><Link to={mosHref(s.mosCode, s.branch)}>{s.mosName}</Link><div className="muted small">{s.branch}{s.unit ? ` · ${s.unit}` : ''}</div></td>
                   <td className="cell-sub">{s.category}</td>
                   <td className="cell-sub">{monthLabel(s.enlistMonth)}</td>
                   <td data-label="모집 / 접수">{s.quota} / {s.applicants}</td>

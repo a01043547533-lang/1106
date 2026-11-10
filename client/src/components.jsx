@@ -7,6 +7,13 @@ import { downloadIcs, googleCalendarUrl } from './lib/ics.js';
 import { LIVE_EVENT, getJson, peekJson } from './lib/fetch-cache.js';
 
 export const n = (it) => it?._norm || it || {};
+// 특기 주소. 특기 코드는 군마다 따로 매겨져 같은 코드가 여러 군에 있으므로 군을 함께 넘긴다.
+// 군이 하나뿐인 코드면 상세 화면이 주소에서 군을 지워 대표 주소(/mos/코드)로 맞춘다.
+export const mosHref = (code, branch) => `/mos/${encodeURIComponent(code)}${branch ? `?branch=${encodeURIComponent(branch === '해병' ? '해병대' : branch)}` : ''}`;
+export const calcHref = (code, branch) => `/calc?${new URLSearchParams({ mos: code, ...(branch ? { branch } : {}) })}`;
+// 비교함 키: '코드@군' (예전에 저장된 '코드'만 있는 값도 그대로 읽는다)
+export const compareKey = (code, branch) => (branch ? `${code}@${branch}` : code);
+export const parseCompareKey = (key) => { const i = String(key).lastIndexOf('@'); return i > 0 ? { code: key.slice(0, i), branch: key.slice(i + 1) } : { code: key, branch: null }; };
 export const fmtRate = (r) => (r === null || r === undefined ? '-' : Number(r).toFixed(2));
 export const formatKst = (value) => value && Number.isFinite(Date.parse(value))
   ? `${new Date(Date.parse(value) + 9 * 3600000).toISOString().slice(0, 19).replace('T', ' ')} KST` : '기록 없음';

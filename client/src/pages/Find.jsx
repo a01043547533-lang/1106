@@ -3,7 +3,7 @@ import { CertificateSection } from '../exam-timeline.jsx';
 // ★ 특기 찾기 — 내 신체조건·자격으로 갈 수 있는 특기. 입력은 서버에 저장되지 않는다.
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BranchBadge, MultiPicker, OfficialApplyLink, RateBar, RulesBox } from '../components.jsx';
+import { BranchBadge, MultiPicker, OfficialApplyLink, RateBar, RulesBox, mosHref } from '../components.jsx';
 
 // 입력 범위. 벗어나면 조회를 막고 칸 아래에 이유를 보여 준다(오타로 엉뚱한 결과를 받지 않게).
 const LIMITS = { height: ['신장', 130, 220, 'cm'], weight: ['체중', 30, 200, 'kg'], vision: ['교정시력', 0.1, 2.0, ''] };
@@ -86,7 +86,7 @@ export default function Find() {
             <ul className="cards">
               {d.groups[key].slice(0, 60).map((m) => (
                 <li key={`${m.branch}-${m.mosCode}-${m.category}`} className="mcard">
-                  <div><BranchBadge branch={m.branch} /> <Link to={`/mos/${encodeURIComponent(m.mosCode)}`}><b>{m.mosName}</b></Link></div>
+                  <div><BranchBadge branch={m.branch} /> <Link to={mosHref(m.mosCode, m.branch)}><b>{m.mosName}</b></Link></div>
                   <div className="muted small">{m.category}</div>
                   <div className="badges">
                     <span className="badge gray">{m.interview === 'Y' ? '면접 있음' : '면접 없음'}</span>

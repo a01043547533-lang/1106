@@ -4,7 +4,7 @@ import { useReveal } from '../motion.jsx';
 // 입영월 플래너
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { RulesBox, addMonths, fmtRate, useApi } from '../components.jsx';
+import { RulesBox, addMonths, fmtRate, useApi, mosHref } from '../components.jsx';
 
 const NEED = '병무청 공지 확인 필요';
 const STATUS = { open: ['접수 중', 'green'], upcoming: ['접수 예정', 'blue'], closed: ['마감', 'gray'], unknown: ['접수기간 확인 필요', 'gray'] };
@@ -180,7 +180,7 @@ export default function Plan() {
                       const min = vals.length ? Math.min(...vals) : null;
                       return (
                         <tr key={`${r.branch}-${r.mosName}`}>
-                          <td><Link to={`/mos/${encodeURIComponent(r.mosCode)}`}>{r.mosName}</Link><div className="muted small">{r.branch}</div></td>
+                          <td><Link to={mosHref(r.mosCode, r.branch)}>{r.mosName}</Link><div className="muted small">{r.branch}</div></td>
                           {months.map((m) => <td key={m} className={r.byMonth[m] === min && min !== null ? 'best' : ''}>{r.byMonth[m] === undefined ? '-' : fmtRate(r.byMonth[m])}</td>)}
                         </tr>
                       );

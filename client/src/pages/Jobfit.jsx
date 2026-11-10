@@ -2,7 +2,7 @@ import { PageHeading } from '../design.jsx';
 // 취업맞춤특기병 입영일별 모집·선발·남은 자리 — 병무청 「맞춤형 특기병 정보」 API. 서버가 10분마다 새로 받는다.
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BranchBadge, OfficialApplyLink, Status, formatKst, useApi } from '../components.jsx';
+import { BranchBadge, OfficialApplyLink, Status, formatKst, useApi, mosHref } from '../components.jsx';
 
 const BRANCHES = ['전체', '육군', '해군', '공군'];
 const PAGE = 30;
@@ -76,7 +76,7 @@ export default function Jobfit() {
         {rows.length > 0 && view === 'mos' && <div className="table-wrap"><table className="grid stack jobfit-table jobfit-groups">
           <thead><tr><th>특기</th><th>입영일별 남은 자리</th><th className="num">모집</th><th className="num">선발</th><th className="num">남은 자리</th></tr></thead>
           <tbody>{groups.map((g) => <tr key={`${g.branch}-${g.mosCode}`}>
-            <td className="cell-name"><BranchBadge branch={g.branch} /> <Link to={`/mos/${encodeURIComponent(g.mosCode)}`}><b>{g.mosName}</b></Link><div className="muted small">{g.unit}</div></td>
+            <td className="cell-name"><BranchBadge branch={g.branch} /> <Link to={mosHref(g.mosCode, g.branch)}><b>{g.mosName}</b></Link><div className="muted small">{g.unit}</div></td>
             <td className="cell-full"><ul className="jf-dates" aria-label={`${g.mosName} 입영일`}>{g.dates.map((r) => <li key={r.enlistDate} className={r.vacancy > 0 ? '' : 'closed'}>{shortDate(r.enlistDate)} {r.vacancy > 0 ? <b>{r.vacancy}</b> : '마감'}</li>)}</ul></td>
             <td className="num" data-label="모집">{g.quota}명</td>
             <td className="num" data-label="선발">{g.selected}명</td>
@@ -86,7 +86,7 @@ export default function Jobfit() {
         {rows.length > 0 && view === 'date' && <div className="table-wrap"><table className="grid stack jobfit-table">
           <thead><tr><th>특기</th><th>입영일</th><th className="num">모집</th><th className="num">선발</th><th className="num">남은 자리</th></tr></thead>
           <tbody>{rows.slice(0, limit).map((r) => <tr key={`${r.branch}-${r.mosCode}-${r.enlistDate}`}>
-            <td className="cell-name"><BranchBadge branch={r.branch} /> <Link to={`/mos/${encodeURIComponent(r.mosCode)}`}><b>{r.mosName}</b></Link><div className="muted small">{[r.unit, r.roundLabel && `${r.roundLabel}회차`].filter(Boolean).join(' · ')}</div></td>
+            <td className="cell-name"><BranchBadge branch={r.branch} /> <Link to={mosHref(r.mosCode, r.branch)}><b>{r.mosName}</b></Link><div className="muted small">{[r.unit, r.roundLabel && `${r.roundLabel}회차`].filter(Boolean).join(' · ')}</div></td>
             <td data-label="입영일">{enlistLabel(r.enlistDate)}</td>
             <td className="num" data-label="모집">{r.quota}명</td>
             <td className="num" data-label="선발">{r.selected}명</td>

@@ -2,7 +2,7 @@ import { CountNumber, useClientData, useScrollReveal } from '../motion.jsx';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useRouteData } from '../data.jsx';
-import { CertificateResources, BranchBadge, Countdown, OfficialApplyLink, RateBar, Status, monthLabel, useApi } from '../components.jsx';
+import { CertificateResources, BranchBadge, Countdown, OfficialApplyLink, RateBar, Status, monthLabel, useApi, mosHref } from '../components.jsx';
 import { closingItems } from './Closing.jsx';
 import { GUIDES } from '../lib/guide-list.js';
 
@@ -34,7 +34,7 @@ export default function Home() {
       {rows.map((s, i) => (
         <tr key={`${s.branch}-${s.mosCode}-${s.unit}-${s.enlistMonth}`}>
           <td className="num">{i + 1}</td>
-          <td><Link className="topcard" to={`/mos/${encodeURIComponent(s.mosCode)}`}>{s.mosName}</Link><div className="muted small">{[s.branch, s.unit, monthLabel(s.enlistMonth)].filter(Boolean).join(' · ')}</div></td>
+          <td><Link className="topcard" to={mosHref(s.mosCode, s.branch)}>{s.mosName}</Link><div className="muted small">{[s.branch, s.unit, monthLabel(s.enlistMonth)].filter(Boolean).join(' · ')}</div></td>
           <td className="num">{s.quota}명</td>
           <td className="num">{s.applicants}명</td>
           <td><RateBar rate={s.rate} countUp={countTop} /></td>
