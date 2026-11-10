@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "node server/web.js",
-    "build": "node scripts/build-forecast.mjs && node scripts/build-eligible-items.mjs && vite build --config client/vite.config.js && node scripts/postbuild-seo.mjs",
+    "build": "node scripts/build-forecast.mjs && node scripts/build-eligible-items.mjs && node scripts/fetch-exam-schedule.mjs && vite build --config client/vite.config.js && node scripts/postbuild-seo.mjs",
     "start": "node server/web.js --prod",
     "test": "node --test tests/vercel.test.mjs",
     "test:vercel": "node --test tests/vercel.test.mjs",

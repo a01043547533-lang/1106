@@ -5,6 +5,7 @@ import * as repo from './repo/index.js';
 import * as q from './queries.js';
 import { TRUST_PROXY, SERVERLESS } from './config.js';
 import { refreshJobfit, refreshStatus } from './live.js';
+import { refreshExams } from './exam-api.js';
 import { waitUntil } from '@vercel/functions';
 import { runtime } from './repo/prepared.js';
 import { requestLimit } from './rate-limit.js';
@@ -34,6 +35,7 @@ app.use('/api', async (req, res, next) => {
   let code = '';
   try { code = req.path.startsWith('/mos/') && req.path !== '/mos/search' ? decodeURIComponent(req.path.slice(5)) : ''; } catch { code = ''; }
   if (req.path === '/jobfit' || (code && q.isJobfitCode(code))) refresh(refreshJobfit, Boolean(runtime.jobfit));
+  if (req.path === '/exam-schedule') refresh(refreshExams, Boolean(runtime.exams));
   if (waits.length) await Promise.race([Promise.all(waits), new Promise((r) => setTimeout(r, 3000))]);
   next();
 });

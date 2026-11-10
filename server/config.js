@@ -39,5 +39,7 @@ export const APIS = {
   scoreSp:   { id: '3066491',  name: '모집병 전문특기병 배점구분', url: process.env.MMA_URL_SCORE_SP || `${B}/gbTgBaeJeom/list/gbTgBaeJeom/list` },
   eligible:  { id: '3066750',  name: '모집병 군별 특기별 지원가능 정보', url: process.env.MMA_URL_ELIGIBLE || `${B}/mjbJiWon/list` },
   jobfit:    { id: '15017227', name: '맞춤형 특기병 정보',         url: process.env.MMA_URL_JOBFIT || `${B}/MachumTG/list` },
+  // 한국산업인력공단 국가기술자격 종목별 시험정보(공공데이터포털 15003029). https를 받지 않아 http.
+  exam:      { id: '15003029', name: '국가기술자격 시험일정',       url: process.env.QNET_URL_EXAM || 'http://openapi.q-net.or.kr/api/service/rest/InquiryTestInformationNTQSVC' },
   social:    { id: '3066757',  name: '사회복무요원 복무기관',      url: process.env.MMA_URL_SOCIAL || `${B}/bmggJeongBo/list` },
 };

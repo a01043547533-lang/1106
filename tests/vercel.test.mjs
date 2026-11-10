@@ -6,6 +6,11 @@ process.env.MMA_API_KEY = 'test-server-only-key';
 const nativeFetch = globalThis.fetch;
 let upstream = 0;
 globalThis.fetch = async (url, options) => {
+  // 국가기술자격 시험일정 API(큐넷)도 네트워크 없이 검증한다
+  if (String(url).startsWith('http://openapi.q-net.or.kr/')) {
+    const item = String(url).includes('getCList') ? '<item><description>2099년 정기 기능사 1회</description><docregstartdt>20990105</docregstartdt><docregenddt>20990108</docregenddt><docexamdt>20990120</docexamdt><docpassdt>20990130</docpassdt><pracregstartdt>20990202</pracregstartdt><pracregenddt>20990205</pracregenddt><pracexamstartdt>20990314</pracexamstartdt><pracexamenddt>20990405</pracexamenddt><pracpassdt>20990410</pracpassdt></item>' : '<item><description>기사,산업기사(2099년도 제1회)</description><docregstartdt>20990112</docregstartdt><docregenddt>20990115</docregenddt><docexamdt>20990130</docexamdt><docpassdt>20990311</docpassdt><pracregstartdt>20990323</pracregstartdt><pracregenddt>20990326</pracregenddt><pracexamstartdt>20990418</pracexamstartdt><pracexamenddt>20990506</pracexamenddt><pracpassdt>20990605</pracpassdt></item>';
+    return new Response(`<response><header><resultCode>00</resultCode></header><body><items>${item}</items></body></response>`);
+  }
   if (String(url).includes('/MachumTG/')) {
     return new Response('<response><header><resultCode>00</resultCode></header><body><totalCount>1</totalCount><items><item><gtcdNm1>육군</gtcdNm1><gtcdNm2>육군훈련소</gtcdNm2><gsteukgiCd>S999.101</gsteukgiCd><gsteukgiNm>(맞춤)검증정비</gsteukgiNm><mojipYy>2027</mojipYy><mojipTms>1</mojipTms><ipyeongDt>20991231</ipyeongDt><mojipPcnt>5</mojipPcnt><cjsbinweon>2</cjsbinweon><jygs>3</jygs></item></items></body></response>');
   }
@@ -18,6 +23,18 @@ globalThis.fetch = async (url, options) => {
 const { app } = await import('../server/app.js');
 const { clientIp, requestLimit } = await import('../server/rate-limit.js');
 const { describeFailure } = await import('../server/live.js');
+const { normalizeExamRows } = await import('../server/exam-api.js');
+
+test('국가기술자격 일정: 정기·빈자리 행을 한 회차로 합치고 상시는 뺀다', () => {
+  const rows = [
+    { description: '2026년 정기 기능사 4회', docregstartdt: '20260824', docregenddt: '20260827', docexamdt: '20260916', docpassdt: '20261007', pracregstartdt: '20261012', pracregenddt: '20261015', pracexamstartdt: '20261114', pracexamenddt: '20261202', pracpassdt: '20261211' },
+    { description: '2026년 정기 기능사 4회', docregstartdt: '20260910', docregenddt: '20260911', docexamdt: '20260916', docpassdt: '20261007', pracregstartdt: '20261108', pracregenddt: '20261109', pracexamstartdt: '20261114', pracexamenddt: '20261202', pracpassdt: '20261211' },
+    { description: '2026년 상시 기능사 3회', docregstartdt: '20260301', docregenddt: '20260302' },
+  ];
+  const [r, ...rest] = normalizeExamRows(rows, '기능사');
+  assert.equal(rest.length, 0);
+  assert.deepEqual([r.name, r.writtenApply, r.writtenApplyExtra[0], r.practicalApply, r.practicalExam, r.finalResult], ['정기 기능사 제4회', '2026-08-24~2026-08-27', '2026-09-10~2026-09-11', '2026-10-12~2026-10-15', '2026-11-14~2026-12-02', '2026-12-11']);
+});
 
 test('병무청 조회 실패 원인 분류', () => {
   assert.equal(describeFailure(new Error('missing_key')).code, 'missing_key');
@@ -87,8 +104,11 @@ test('Vercel: 읽기 전용 파일시스템, 비공개 키, 실제 API 경로', 
     // 예측·시험일정·감시 API
     const fc = await (await fetch(`${base}/api/forecast`)).json();
     assert(Array.isArray(fc.items) && 'ready' in fc.summary); assert(['ok', 'collecting', 'too-early', 'none'].includes(fc.items[0].forecast.status));
-    const ex = await (await fetch(`${base}/api/exam-schedule?deadline=2026-12-31`)).json();
-    assert(ex.rounds.length >= 7 && ex.rounds.every((r) => typeof r.canApply === 'boolean' && typeof r.inTime === 'boolean'));
+    // 첫 응답은 저장본일 수 있고, API 조회가 끝나면 live로 바뀐다
+    let ex = await (await fetch(`${base}/api/exam-schedule?deadline=2099-12-31`)).json();
+    for (let i = 0; i < 50 && !ex.live; i++) { await new Promise((r) => setTimeout(r, 50)); ex = await (await fetch(`${base}/api/exam-schedule?deadline=2099-12-31`)).json(); }
+    assert.equal(ex.live, true); assert.deepEqual(ex.rounds.map((r) => r.name), ['정기 기능사 제1회', '정기 기사 제1회']);
+    assert(ex.rounds.every((r) => typeof r.canApply === 'boolean' && typeof r.inTime === 'boolean'));
     const ping = await fetch(`${base}/api/ping`); assert.equal(ping.status, 200); assert.equal((await ping.json()).ok, true);
   } finally { Object.assign(fs, original); globalThis.fetch = nativeFetch; await new Promise((resolve) => server.close(resolve)); }
 });

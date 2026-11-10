@@ -20,4 +20,4 @@ export function readPrepared(key, { keep = true } = {}) {
   cache.set(key, data);
   return data;
 }
-export const runtime = { snapshots: null, jobfit: null, logs: [] };
+export const runtime = { snapshots: null, jobfit: null, exams: null, logs: [] };

@@ -1,6 +1,7 @@
 // API 핸들러와 SSR 로더가 함께 쓰는 조회 함수.
 // 같은 함수를 쓰기 때문에 화면 본문 숫자와 /api 응답 숫자가 갈리지 않는다.
 import * as repo from './repo/index.js';
+import { runtime } from './repo/prepared.js';
 import { SITE } from './config.js';
 import { koreaDay, scheduleTime } from './time.js';
 
@@ -186,9 +187,10 @@ export function forecastSummary() {
 // ── 자격 시험 일정 ──
 // 접수 마감일 전에 최종 합격 발표가 나는 정기 시험 중, 아직 필기 원서접수가 남은 것을 고른다.
 export function examsBefore(deadline, day = today()) {
-  const sched = repo.getExamSchedule();
+  const live = runtime.exams;
+  const sched = live ? { year: live.year, rounds: live.rounds, source: `한국산업인력공단 국가기술자격 시험정보 API · ${live.fetchedAt.slice(0, 10)} 조회`, sourceUrl: 'https://www.data.go.kr/data/15003029/openapi.do', live: true } : repo.getExamSchedule();
   if (!sched) return { year: null, rounds: [], source: null };
   const start = (v) => String(v || '').split('~')[0];
   const rounds = (sched.rounds || []).map((r) => ({ ...r, canApply: start(r.writtenApply) >= day, inTime: !deadline || r.finalResult <= String(deadline).slice(0, 10) }));
-  return { year: sched.year, source: sched.source, sourceUrl: sched.sourceUrl, note: sched.note, rounds };
+  return { year: sched.year, source: sched.source, sourceUrl: sched.sourceUrl, note: sched.note, live: Boolean(sched.live), rounds };
 }

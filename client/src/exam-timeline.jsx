@@ -27,9 +27,9 @@ export function ExamYearTable() {
     <p className="exam-title">{d.year}년 국가기술자격 정기 시험 일정</p>
     <p className="small">{nextApply ? <>다음 필기 원서접수는 <b>{nextApply.name} · {md(nextApply.writtenApply)}</b>이에요.</> : <>{d.year}년 정기 시험의 원서접수는 모두 끝났어요. 다음 해 시행계획은 보통 12월에 큐넷에 공고돼요.</>} 접수부터 최종 합격 발표까지 기능사는 약 3개월, 기사·산업기사는 약 5개월 걸려요.</p>
     <div className="table-wrap"><table className="grid stack exam-table">
-      <thead><tr><th>회차</th><th>필기 접수</th><th>필기 시험</th><th>실기 시험</th><th>최종 발표</th><th>상태</th></tr></thead>
+      <thead><tr><th>회차</th><th>필기 접수</th><th>필기 시험(시작)</th><th>실기 시험</th><th>최종 발표</th><th>상태</th></tr></thead>
       <tbody>{rows.map((r) => <tr key={r.name} className={`exam-${r.state[0]}`}>
-        <td className="cell-name"><b>{r.name}</b><div className="muted small">{r.level}</div></td>
+        <td className="cell-name"><b>{r.name}</b><div className="muted small">{r.level}{r.writtenApplyExtra?.length ? ` · 필기 빈자리 접수 ${r.writtenApplyExtra.map(md).join(', ')}` : ''}</div></td>
         <td data-label="필기 접수">{md(r.writtenApply)}</td>
         <td data-label="필기 시험">{md(r.writtenExam)}</td>
         <td data-label="실기 시험">{md(r.practicalExam)}</td>
@@ -37,7 +37,7 @@ export function ExamYearTable() {
         <td data-label="상태"><span className={`badge ${r.state[0] === 'done' ? 'gray' : r.state[0] === 'running' ? 'blue' : 'green'}`}>{r.state[1]}</span></td>
       </tr>)}</tbody>
     </table></div>
-    <p className="muted small">출처: {d.source} · <a href={d.sourceUrl} target="_blank" rel="noopener noreferrer">큐넷 일정 ↗</a> · 모집병 배점은 보통 접수 마감일까지 취득한 자격만 인정돼요. 특기별로 어느 시험이 접수 마감 전에 끝나는지는 <Link to="/calc">예상 배점 계산기</Link>에서 볼 수 있어요.</p>
+    <p className="muted small">출처: {d.source}{d.live ? '' : ' (저장본)'} · <a href={d.sourceUrl} target="_blank" rel="noopener noreferrer">자료 안내 ↗</a> · <a href="https://www.q-net.or.kr/crf021.do?id=crf02103" target="_blank" rel="noopener noreferrer">큐넷 일정 ↗</a> · 모집병 배점은 보통 접수 마감일까지 취득한 자격만 인정돼요. 특기별로 어느 시험이 접수 마감 전에 끝나는지는 <Link to="/calc">예상 배점 계산기</Link>에서 볼 수 있어요.</p>
   </div>;
 }
 
@@ -61,6 +61,6 @@ export function ExamTimeline({ deadline, compact = false }) {
     <p className="exam-title">{deadline ? '이 접수 마감 전에 합격 발표가 나는 자격 시험' : `${d.year}년 국가기술자격 정기 시험`}</p>
     {ok.length ? <ul>{ok.map((r) => <li key={r.name}><b>{r.name}</b> <span className="muted small">필기 접수 {md(r.writtenApply)} · 필기 {md(r.writtenExam)} · 실기 {md(r.practicalExam)} · 최종 발표 {md(r.finalResult)}</span></li>)}</ul>
       : <p className="muted small">{applyLeft.length ? '남은 시험은 최종 발표가 이 접수 마감보다 늦어요. 다음 회차 접수에 맞출 수 있어요.' : `${d.year}년 정기 시험의 원서접수가 모두 지났어요. 다음 해 시행계획은 보통 12월에 큐넷에 공고돼요.`}</p>}
-    <p className="muted small">출처: {d.source} · <a href={d.sourceUrl} target="_blank" rel="noopener noreferrer">큐넷 일정 ↗</a> · 접수일 기준으로 취득한 자격만 인정되는 게 보통이에요. <Link to="/guide/score-basics">배점 안내</Link></p>
+    <p className="muted small">출처: {d.source}{d.live ? '' : ' (저장본)'} · <a href="https://www.q-net.or.kr/crf021.do?id=crf02103" target="_blank" rel="noopener noreferrer">큐넷 일정 ↗</a> · 접수일 기준으로 취득한 자격만 인정되는 게 보통이에요. <Link to="/guide/score-basics">배점 안내</Link></p>
   </div>;
 }

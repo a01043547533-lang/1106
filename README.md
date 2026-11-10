@@ -62,7 +62,7 @@ npm test
 ## 마감 예측 · 자격 시험 일정 · 감시
 
 - **마감 지원률 예측**: `scripts/collect-snapshots.mjs`가 접수현황을 `server/data/history/YYYY-MM.jsonl`에 쌓고, `scripts/build-forecast.mjs`(빌드 때 자동 실행)가 「마감 N시간 전 지원률 → 마감 지원률」 비율을 모집구분·군·전체 단위로 계산해 `server/data/forecast.json`을 만듭니다. 화면(마감 임박 보드, 특기 상세)은 표본이 8건 이상 모인 구간부터 예상치와 25~75% 범위를 보여 주고, 그 전에는 「기록 수집 중」으로 표시합니다. 수집은 `.github/workflows/collect-snapshots.yml`이 30분마다 하고 하루 한 번 예측표를 다시 만들어 커밋합니다(저장소 Secrets에 `MMA_API_KEY` 필요, Vercel Ignored Build Step 설정은 워크플로 주석 참고).
-- **자격 시험 일정**: `server/data/exam_schedule.json`(연도별 정기 시험 일정). 계산기와 특기 상세가 「이 접수 마감 전에 최종 발표가 나는 시험」을 보여 줍니다. 다음 해 시행계획이 큐넷에 공고되면(보통 12월) 같은 형식으로 바꿔 주세요. 현재 값은 민간 정리표를 큐넷 월간 일정과 대조한 것이라 화면에 출처를 그대로 표시합니다.
+- **자격 시험 일정**: 한국산업인력공단 「국가기술자격 종목별 시험정보」 API(공공데이터포털 15003029, 병무청과 같은 인증키)를 서버가 하루 한 번 받아 기사·산업기사·기능사 정기 회차를 보여 줍니다(정기·빈자리 접수 행을 한 회차로 합치고 상시 기능사는 제외). 이 서비스는 https를 받지 않아 http로 호출합니다. 실패하면 `server/data/exam_schedule.json` 저장본을 쓰며, 저장본은 빌드할 때 `scripts/fetch-exam-schedule.mjs`가 API로 다시 만듭니다.
 - **외부 감시**: `/api/ping`은 접수현황 수집이 연속 3회 이상 실패했거나 6시간 넘게 성공이 없으면 503을 돌려줍니다. UptimeRobot 같은 무료 서비스에 5분 간격 HTTP 감시로 등록하면 장애 알림을 받습니다.
 - **접속 통계**: Vercel Analytics(쿠키 없음). Vercel 프로젝트에서 Analytics를 켜면 집계가 시작됩니다.
 
