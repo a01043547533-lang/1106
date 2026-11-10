@@ -69,8 +69,8 @@ export function operationStatus(now = Date.now()) {
     for (let i = logs.length - 1; i >= 0 && !logs[i].ok; i--) consecutiveFailures++;
     return { key, name: api.name, lastAttemptAt: last?.at || null, ok: last?.ok ?? null,
       lastSuccessAt: logs.findLast((r) => r.ok)?.at || null, lastFailureAt: logs.findLast((r) => !r.ok)?.at || null,
-      httpStatus: last?.httpStatus ?? null, consecutiveFailures };
+      httpStatus: last?.httpStatus ?? null, consecutiveFailures, error: last && !last.ok ? last.error || null : null, reason: last && !last.ok ? last.reason || null : null, lastMs: last?.ms ?? null };
   });
-  return { ...collectStatus(now), apis, deploymentMode: 'serverless', apiConfigured: Boolean(process.env.MMA_API_KEY),
+  return { ...collectStatus(now), apis, deploymentMode: 'serverless', apiConfigured: Boolean(process.env.MMA_API_KEY), region: process.env.VERCEL_REGION || null,
     referenceData: readJson('prepared/manifest.json', []), checkedAt: new Date(now).toISOString() };
 }

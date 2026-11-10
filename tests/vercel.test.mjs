@@ -17,6 +17,16 @@ globalThis.fetch = async (url, options) => {
 };
 const { app } = await import('../server/app.js');
 const { clientIp, requestLimit } = await import('../server/rate-limit.js');
+const { describeFailure } = await import('../server/live.js');
+
+test('병무청 조회 실패 원인 분류', () => {
+  assert.equal(describeFailure(new Error('missing_key')).code, 'missing_key');
+  assert.equal(describeFailure(new Error('upstream_error_30')).code, 'portal_30');
+  assert.match(describeFailure(new Error('upstream_error_30')).reason, /등록되지 않은 인증키/);
+  assert.equal(describeFailure(new Error('upstream_http_502')).code, 'http_502');
+  assert.match(describeFailure(new Error('upstream_http_403')).reason, /인증키가 거부/);
+  assert.equal(describeFailure(Object.assign(new Error('x'), { name: 'TimeoutError' })).code, 'timeout');
+});
 
 test('요청 제한: Vercel에서는 방문자 IP 헤더로 구분한다', () => {
   const req = { headers: { 'x-real-ip': '203.0.113.7', 'x-vercel-forwarded-for': '203.0.113.7' }, ip: '10.0.0.1', socket: { remoteAddress: '10.0.0.1' } };

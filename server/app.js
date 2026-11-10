@@ -5,6 +5,8 @@ import * as repo from './repo/index.js';
 import * as q from './queries.js';
 import { TRUST_PROXY, SERVERLESS } from './config.js';
 import { refreshJobfit, refreshStatus } from './live.js';
+import { waitUntil } from '@vercel/functions';
+import { runtime } from './repo/prepared.js';
 import { requestLimit } from './rate-limit.js';
 
 
@@ -19,14 +21,20 @@ app.use('/api', async (req, res, next) => {
   if (['/subscribe', '/verify', '/unsubscribe'].includes(req.path)) return res.status(503).json({ error: '이메일 알림은 제공하지 않습니다. 모집 일정 화면을 확인해 주세요.' });
   // 이미 받아 둔 실시간 자료가 있으면 기다리지 않고 바로 응답하고 갱신은 뒤에서 한다.
   // 서버가 막 켜져 실시간 자료가 없을 때만 첫 조회를 기다린다(그래야 첫 화면부터 최신 값).
-  // 첫 요청도 기다리지 않는다. 저장된 최근 기록으로 바로 답하고(화면은 「갱신 중」 표시), 실시간 값은 다음 요청부터 나간다.
-  // Vercel은 응답 뒤 함수를 재울 수 있어 갱신이 다음 방문으로 밀릴 수 있지만, 빈 화면 2~3초보다 낫다.
-  const refresh = (fn) => { fn().catch(() => {}); };
-  if (['/now', '/stats', '/calendar', '/rounds', '/plan', '/health', '/mos', '/mos/search', '/forecast', '/ping'].includes(req.path) || req.path.startsWith('/mos/')) refresh(refreshStatus);
+  // 갱신은 waitUntil로 응답 뒤에도 끝까지 살려 둔다(Vercel은 응답 직후 함수를 멈추므로, 이게 없으면 조회가 영영 끝나지 않는다).
+  // 실시간 값이 아직 없으면 최대 3초만 기다리고, 그래도 안 끝나면 저장된 기록으로 먼저 답한다(화면은 「갱신 중」 표시).
+  const waits = [];
+  const refresh = (fn, have) => {
+    const task = Promise.resolve(fn()).catch(() => {});
+    waitUntil(task);
+    if (!have) waits.push(task);
+  };
+  if (['/now', '/stats', '/calendar', '/rounds', '/plan', '/health', '/mos', '/mos/search', '/forecast', '/ping'].includes(req.path) || req.path.startsWith('/mos/')) refresh(refreshStatus, Boolean(runtime.snapshots));
   // 맞춤형 특기병 정보는 그 화면과 해당 특기 상세에서만 새로 받는다(다른 화면은 기다리지 않게).
   let code = '';
   try { code = req.path.startsWith('/mos/') && req.path !== '/mos/search' ? decodeURIComponent(req.path.slice(5)) : ''; } catch { code = ''; }
-  if (req.path === '/jobfit' || (code && q.isJobfitCode(code))) refresh(refreshJobfit);
+  if (req.path === '/jobfit' || (code && q.isJobfitCode(code))) refresh(refreshJobfit, Boolean(runtime.jobfit));
+  if (waits.length) await Promise.race([Promise.all(waits), new Promise((r) => setTimeout(r, 3000))]);
   next();
 });
 const startedAt = Date.now();
