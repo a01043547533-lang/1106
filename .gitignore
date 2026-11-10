@@ -25,3 +25,6 @@ server/data/scoring_rules_special.json
 server/data/social_orgs.json
 server/data/collect_log.jsonl
 client/vite.config.js.timestamp-*.mjs
+
+.vercel
+.env*
