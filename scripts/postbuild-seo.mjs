@@ -31,7 +31,10 @@ const urls = [
 ];
 
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const robots = ['User-agent: *', 'Allow: /', 'Disallow: /api/', 'Disallow: /status', 'Disallow: /contact', site ? `Sitemap: ${site}/sitemap.xml` : '', ''].filter((l, i, a) => l !== '' || i === a.length - 1).join('\n');
+// 다음(Daum) 웹마스터도구 소유 확인: 사이트 등록 때 받은 값을 DAUM_WEBMASTER_TOOL에 넣으면 robots.txt에 한 줄 추가한다.
+const daum = (process.env.DAUM_WEBMASTER_TOOL || '').trim().replace(/^#?DaumWebMasterTool:/, '');
+const daumLine = /^[\w:.-]+$/.test(daum) ? `#DaumWebMasterTool:${daum}` : '';
+const robots = ['User-agent: *', 'Allow: /', 'Disallow: /api/', 'Disallow: /status', 'Disallow: /contact', site ? `Sitemap: ${site}/sitemap.xml` : '', daumLine, ''].filter((l, i, a) => l !== '' || i === a.length - 1).join('\n');
 fs.writeFileSync(path.join(OUT, 'robots.txt'), robots);
 
 // ads.txt — AdSense 게시자 ID(VITE_ADSENSE_CLIENT=ca-pub-숫자)가 있으면 Google 표준 한 줄로 만든다.
