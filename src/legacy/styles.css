@@ -639,3 +639,7 @@ details.result-group[open] > summary { margin-bottom: 12px; }
 /* 색칠은 글씨 폭만큼만, 글씨 시작선은 다른 메뉴와 맞춤 */
 .nav-group a:is([href="/service"], [href="/pay"], [href="/cert"]) { width: fit-content; padding: 2px 8px; margin: 2px 0 2px -8px; border-radius: 6px; }
 .sv-code a { word-break: break-all; overflow-wrap: anywhere; }
+
+/* 접수 공백기 안내(홈 히어로 창) */
+.no-open { margin: 4px 0 16px; padding: 14px 16px; border-radius: var(--radius-sm); background: var(--amber-soft); border: 1px solid #ecd68f; color: var(--maroon); font-size: 15px; line-height: 1.7; }
+.no-open p { margin: 0 0 4px; } .no-open p:last-child { margin: 0; }

@@ -6,6 +6,33 @@ import { useRouteData } from '../data.jsx';
 import { CertificateResources, BranchBadge, Countdown, OfficialApplyLink, RateBar, Status, monthLabel, useApi, mosHref } from '../components.jsx';
 import { closingItems } from './Closing.jsx';
 import { GUIDES } from '../lib/guide-list.js';
+import { koreaDay } from '../../../shared/dates.js';
+
+// 접수 중인 회차가 없을 때: 오류로 보이지 않게 최근 마감일·다음 접수·진행 중인 다른 신청을 알려 준다.
+const mdKo = (v) => { const d = String(v || '').slice(0, 10); return d ? `${Number(d.slice(5, 7))}월 ${Number(d.slice(8, 10))}일` : ''; };
+function useNoOpenInfo() {
+  const sched = useApi('/api/rounds');
+  const cal = useApi('/api/calendar');
+  const day = koreaDay();
+  const all = sched.data?.items || [];
+  const lastClosed = all.map((r) => String(r.applyEnd || '').slice(0, 10)).filter((d) => d && d < day).sort().at(-1) || null;
+  const next = all.filter((r) => String(r.applyStart || '').slice(0, 10) > day).sort((a, b) => String(a.applyStart).localeCompare(String(b.applyStart)))[0] || null;
+  const ongoing = (cal.data?.items || []).filter((e) => e.start && e.start <= day && (e.end || e.start) >= day);
+  return { lastClosed, next, ongoing, ready: Boolean(sched.data) };
+}
+function NoOpenNote({ info }) {
+  const { lastClosed, next, ongoing } = info;
+  return (
+    <div className="no-open" role="status">
+      <p><b>지금은 모집병 접수 기간이 아니에요.</b>{' '}
+        {lastClosed && <>가장 최근 접수는 {mdKo(lastClosed)}에 마감됐어요. </>}
+        {next ? <>다음 접수는 <b>{mdKo(next.applyStart)} {next.branch}</b> 회차부터예요.</> : <>다음 접수는 병무청 공고가 나오면 여기에 바로 떠요.</>}
+      </p>
+      {ongoing.length > 0 && <p>지금 진행 중: {ongoing.map((e, i) => <span key={e.id || e.title}>{i > 0 && ', '}<b>{e.title}</b> ({mdKo(e.start)}~{mdKo(e.end)})</span>)}</p>}
+      <p><Link to="/calendar">모집 일정 보기 →</Link></p>
+    </div>
+  );
+}
 
 export default function Home() {
   const countStats = useClientData('stats');
@@ -14,6 +41,7 @@ export default function Home() {
   const cal = useRouteData('calendar', '/api/calendar', (r) => r.items.slice(0, 3));
   const stats = useRouteData('stats', '/api/stats');
   const rounds = useApi('/api/now?sort=rate_asc', { interval: 30000 });
+  const noOpen = useNoOpenInfo();
 
   // 지금 접수 중인 회차 (군·모집구분별로 묶음)
   const open = [];
@@ -70,7 +98,7 @@ export default function Home() {
             <div className="window-body">
               <div className="section-heading"><h2 id="rounds"><span className="live-dot" aria-hidden="true" />지금 접수 중인 회차</h2><Link to="/now">접수 전체 보기 →</Link></div>
               <Status state={rounds} />
-              {rounds.data && !open.length && <p className="muted">지금 접수 중인 회차가 없어요</p>}
+              {rounds.data && !open.length && <NoOpenNote info={noOpen} />}
               {open.length > 0 && <div className="table-wrap"><table className="doc-table">
                 <thead><tr><th>군</th><th>모집분야</th><th>회차</th><th className="num">마감까지</th></tr></thead>
                 <tbody>
@@ -99,7 +127,7 @@ export default function Home() {
       <section className="band band-cream" aria-labelledby="low-rate">
         <div className="band-inner">
           <div className="band-heading" data-reveal><h2 id="low-rate">지금 접수 중인 특기{openRows.length ? ` ${openRows.length}개` : ''}</h2><p>지원률이 낮은 순서예요. 1.0 미만(미달)은 지금 지원자가 모집인원보다 적다는 뜻이에요.</p></div>
-          <Status state={now} empty={now.value && !now.value.length ? '지금 접수 중인 특기가 없어요. 곧 시작하는 접수는 「지금 접수」 화면에서 볼 수 있어요.' : null} />
+          <Status state={now} empty={now.value && !now.value.length ? `지금 접수 중인 특기가 없어요. ${noOpen.lastClosed ? `가장 최근 접수는 ${mdKo(noOpen.lastClosed)}에 마감됐고, ` : ''}${noOpen.next ? `다음 접수는 ${mdKo(noOpen.next.applyStart)}부터예요.` : '다음 접수는 병무청 공고가 나오면 바로 보여 드려요.'}` : null} />
           {top.length > 0 && <RankTable rows={top} label="지금 접수 중인 특기" />}
           {openRows.length > LIMIT && <p className="panel-link" data-reveal><Link to="/now">나머지 {openRows.length - LIMIT}개 포함 전체 보기 →</Link></p>}
           <aside className="note" data-reveal aria-labelledby="rate-help-title">
