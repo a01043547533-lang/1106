@@ -1,4 +1,4 @@
-// 빌드 뒤 dist/client에 robots.txt와 sitemap.xml을 만든다.
+// 빌드 뒤 public에 robots.txt와 sitemap.xml을 만든다.
 // 주소는 SITE_URL(권장) → VERCEL_PROJECT_PRODUCTION_URL(Vercel 기본 제공) 순으로 정한다.
 // 주소를 알 수 없으면 sitemap은 만들지 않고 robots.txt만 둔다(잘못된 주소의 사이트맵은 안 만드는 편이 낫다).
 import fs from 'node:fs';
@@ -6,16 +6,16 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OUT = path.join(ROOT, 'dist/client');
-if (!fs.existsSync(OUT)) { console.error('[seo] dist/client가 없어요. vite build 뒤에 실행하세요.'); process.exit(1); }
+const OUT = path.join(ROOT, 'public');
+if (!fs.existsSync(OUT)) { console.error('[seo] public 폴더가 없어요.'); process.exit(1); }
 
-const site = (process.env.SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '')).replace(/\/$/, '');
+const site = (process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '')).replace(/\/$/, '');
 const today = new Date().toISOString().slice(0, 10);
 
 // 정적 라우트. /status·/contact는 색인 가치가 낮아 제외(화면에서도 noindex).
-const STATIC = ['/', '/now', '/closing', '/find', '/calendar', '/plan', '/calc', '/compare', '/jobfit', '/mos', '/prepare', '/social', '/alerts', '/guide', '/about', '/privacy', '/terms'];
+const STATIC = ['/', '/now', '/closing', '/find', '/calendar', '/plan', '/calc', '/compare', '/jobfit', '/mos', '/prepare', '/social', '/alerts', '/guide', '/about', '/privacy', '/terms', '/cert', '/service', '/pay', '/training', '/todo', '/developers'];
 
-const { GUIDES } = await import(path.join(ROOT, 'client/src/lib/guide-list.js').replace(/\\/g, '/').replace(/^([A-Za-z]):/, 'file:///$1:'));
+const { GUIDES } = await import(path.join(ROOT, 'src/legacy/lib/guide-list.js').replace(/\\/g, '/').replace(/^([A-Za-z]):/, 'file:///$1:'));
 let mosCodes = [];
 try {
   const { mosIndex } = await import(path.join(ROOT, 'server/queries.js').replace(/\\/g, '/').replace(/^([A-Za-z]):/, 'file:///$1:'));
@@ -36,7 +36,7 @@ fs.writeFileSync(path.join(OUT, 'robots.txt'), robots);
 
 // ads.txt — AdSense 게시자 ID(VITE_ADSENSE_CLIENT=ca-pub-숫자)가 있으면 Google 표준 한 줄로 만든다.
 // ID가 없으면 만들지 않는다(그 주소는 404). 화면(HTML)이 ads.txt로 응답하면 AdSense가 잘못된 파일로 본다.
-const adsClient = (process.env.VITE_ADSENSE_CLIENT || '').trim();
+const adsClient = (process.env.NEXT_PUBLIC_ADSENSE_CLIENT || process.env.VITE_ADSENSE_CLIENT || '').trim();
 const adsFile = path.join(OUT, 'ads.txt');
 if (/^ca-pub-[0-9]+$/.test(adsClient)) {
   const pub = adsClient.replace(/^ca-/, '');

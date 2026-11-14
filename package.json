@@ -1,34 +1,39 @@
 {
-  "name": "ipdae-timing",
-  "version": "0.1.0",
+  "name": "ipdae-next",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "입대타이밍 — 병무청 공공데이터로 모집병 지원률·모집 일정·특기 조건을 보여주는 정보 사이트",
-  "engines": {
-    "node": ">=20"
-  },
+  "description": "입대타이밍 (Next.js) — 모집병 지원률·일정·특기 + 입대 후 복무 계산·훈련소 준비물",
+  "engines": { "node": ">=20" },
   "scripts": {
-    "dev": "node server/web.js",
-    "build": "node scripts/build-forecast.mjs && node scripts/build-eligible-items.mjs && node scripts/fetch-exam-schedule.mjs && vite build --config client/vite.config.js && node scripts/postbuild-seo.mjs",
-    "start": "node server/web.js --prod",
-    "test": "node --test tests/vercel.test.mjs tests/client.test.mjs tests/regressions.test.mjs",
-    "test:vercel": "node --test tests/vercel.test.mjs",
-    "import:service-terms": "node server/repo/import-service-terms.js",
+    "dev": "next dev",
+    "prebuild": "node scripts/build-forecast.mjs && node scripts/build-eligible-items.mjs && node scripts/fetch-exam-schedule.mjs && node scripts/postbuild-seo.mjs",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "vitest run && node --test tests/vercel.test.mjs tests/regressions.test.mjs",
+    "test:service": "vitest run",
     "collect": "node scripts/collect-snapshots.mjs",
-    "forecast": "node scripts/build-forecast.mjs"
+    "forecast": "node scripts/build-forecast.mjs",
+    "watch": "node scripts/watch-notices.mjs",
+    "import:service-terms": "node server/repo/import-service-terms.js"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
     "@vercel/functions": "^3.11.1",
     "express": "^4.21.2",
     "fast-xml-parser": "^5.12.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^7.18.5"
+    "next": "16.4.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
-    "react-test-renderer": "^18.3.1",
-    "vite": "^6.4.6"
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.6",
+    "typescript": "^5",
+    "vitest": "^3"
   }
 }

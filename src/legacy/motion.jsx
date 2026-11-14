@@ -1,0 +1,99 @@
+import { useContext, useEffect, useRef, useState } from 'react';
+import { useLocation } from '@/legacy/router.jsx';
+import { DataContext } from './data.jsx';
+
+const allowed = () => !matchMedia('(prefers-reduced-motion: reduce)').matches;
+export function useClientData(key) {
+  const initial = useContext(DataContext);
+  const { pathname } = useLocation();
+  return !(initial.path === pathname && key in (initial.data || {}));
+}
+
+// SSR and the first client render always contain the completed value.
+export function CountNumber({ value, decimals = 0, animate = false }) {
+  const [run, setRun] = useState(false);
+  useEffect(() => { if (animate && allowed()) setRun(true); }, [animate]);
+  if (value == null) return '-';
+  return <span className={run ? 'count-number counting' : 'count-number'} style={{ '--target': Math.round(Number(value) * 10 ** decimals) }}>
+    <span className="count-final">{Number(value).toFixed(decimals)}</span>
+    {run && <span aria-hidden="true" className={`count-visual ${decimals ? 'decimal' : ''}`} />}
+  </span>;
+}
+
+export function useReveal(ref, dependency) {
+  useEffect(() => {
+    if (!ref.current || !allowed()) return undefined;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(({ target, isIntersecting }) => {
+        if (isIntersecting) {
+          target.classList.remove('reveal-ready');
+          target.classList.add('reveal-played');
+          observer.unobserve(target);
+        }
+      });
+    }, { threshold: 0.1 });
+    const targets = ref.current.querySelectorAll('.steps:not(.reveal-played), .chart .line:not(.reveal-played)');
+    targets.forEach((el) => { el.classList.add('reveal-ready'); observer.observe(el); });
+    return () => { observer.disconnect(); targets.forEach((el) => el.classList.remove('reveal-ready')); };
+  }, [ref, dependency]);
+}
+
+export function useRowMotion(ref, filter) {
+  const previous = useRef(filter);
+  useEffect(() => {
+    if (previous.current === filter) return;
+    previous.current = filter;
+    if (!allowed()) return;
+    const rows = ref.current?.querySelectorAll('tbody tr') || [];
+    rows.forEach((row, i) => { row.classList.remove('row-enter'); row.style.setProperty('--row-delay', `${i * 30}ms`); });
+    if (rows.length) void rows[0].offsetHeight;
+    rows.forEach((row) => row.classList.add('row-enter'));
+  }, [filter, ref]);
+}
+
+export function HoverSummary({ targetRef, rows }) {
+  const [tip, setTip] = useState(null);
+  useEffect(() => {
+    const root = targetRef.current;
+    const media = matchMedia('(hover:hover) and (pointer:fine)');
+    let timer; let active; let latest;
+    const leave = () => { clearTimeout(timer); active = null; setTip(null); };
+    const move = (e) => {
+      if (!media.matches || !allowed()) return;
+      const row = e.target.closest('tr[data-summary]');
+      if (!row) { leave(); return; }
+      latest = { data: rows[Number(row.dataset.summary)], x: Math.max(8, Math.min(e.clientX + 16, innerWidth - 230)), y: Math.max(8, Math.min(e.clientY + 16, innerHeight - 150)) };
+      if (active === row) { setTip((old) => old ? latest : old); return; }
+      leave(); active = row;
+      timer = setTimeout(() => setTip(latest), 80);
+    };
+    root?.addEventListener('pointermove', move); root?.addEventListener('pointerleave', leave);
+    media.addEventListener('change', leave);
+    return () => { leave(); root?.removeEventListener('pointermove', move); root?.removeEventListener('pointerleave', leave); media.removeEventListener('change', leave); };
+  }, [targetRef, rows]);
+  return tip && <aside aria-hidden="true" className="hover-summary" style={{ left: tip.x, top: tip.y }}><b>{tip.data.mosName}</b><div>모집 {tip.data.quota} / 접수 {tip.data.applicants}</div><div>입영월 {tip.data.enlistMonth}</div></aside>;
+}
+
+// 스크롤 시 섹션이 부드럽게 떠오른다. JS가 준비 클래스를 붙이므로 JS가 없어도 내용은 항상 보인다.
+export function useScrollReveal(ref) {
+  useEffect(() => {
+    const root = ref.current;
+    if (!root || !allowed() || typeof IntersectionObserver === 'undefined') return undefined;
+    const targets = [...root.querySelectorAll('[data-reveal]')];
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(({ target, isIntersecting, boundingClientRect }) => {
+        // 화면에 들어왔거나, 한 번에 멀리 건너뛰어 이미 위로 지나간 구역은 바로 보여 준다(숨은 채 남지 않게).
+        if (!isIntersecting && boundingClientRect.top >= 0) return;
+        target.classList.add('revealed');
+        observer.unobserve(target);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    targets.forEach((el) => { el.classList.add('reveal-ready'); observer.observe(el); });
+    // 관찰자는 교차가 바뀔 때만 알려 주므로, 한 번에 멀리 건너뛰면 지나친 구역이 남는다. 스크롤 때마다 위로 지나간 구역을 훑어 보여 준다.
+    let raf = 0;
+    const sweep = () => { raf = 0; targets.forEach((el) => { if (!el.classList.contains('revealed') && el.getBoundingClientRect().top < window.innerHeight) { el.classList.add('revealed'); observer.unobserve(el); } }); };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(sweep); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => { observer.disconnect(); window.removeEventListener('scroll', onScroll); if (raf) cancelAnimationFrame(raf); targets.forEach((el) => el.classList.remove('reveal-ready', 'revealed')); };
+  }, [ref]);
+}

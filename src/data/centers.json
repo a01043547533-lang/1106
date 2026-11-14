@@ -1,0 +1,977 @@
+{
+  "updated": "2026-11-14",
+  "common": {
+    "docs": [
+      {
+        "name": "입영통지서",
+        "tip": "복사본도 돼요. 신분증을 잃어버렸을 때도 써요."
+      },
+      {
+        "name": "신분증",
+        "tip": "주민등록증·운전면허증·여권 가운데 하나"
+      },
+      {
+        "name": "나라사랑카드",
+        "tip": "출입 확인과 급여 받는 데 써요. 소액을 넣어 두세요."
+      },
+      {
+        "name": "6·25 전사자 유가족 찾기 설문지",
+        "tip": "입영통지서와 함께 와요. 미리 써 가세요."
+      },
+      {
+        "name": "자격증·면허증·경력증명서 사본 (있으면)",
+        "tip": "특기 분류에 참고해요. 안 가져가면 자격 인정이 안 될 수 있어요."
+      },
+      {
+        "name": "질병 입증 서류 (해당자)",
+        "tip": "입대 전 치료받던 병이 있으면 진단서 등"
+      }
+    ],
+    "banned": [],
+    "note": "2025년 7월부터 모든 입영자가 입영 전에 병무청 입영판정검사를 받고, 입영 뒤 귀가 제도는 없어졌어요. 머리는 스포츠형(앞·윗머리 3cm 안팎, 옆·뒷머리 1cm 이내), 옷은 간편한 차림에 운동화."
+  },
+  "centers": [
+    {
+      "docs": [],
+      "phone": "육군훈련소 대표 041-740-7777",
+      "lastVerified": "2026-11-14",
+      "id": "nonsan",
+      "name": "육군훈련소",
+      "short": "육군훈련소(논산)",
+      "branch": "army",
+      "kind": "nonsan",
+      "weeks": 6,
+      "durationLabel": "6주 훈련",
+      "graduationWeekday": 2,
+      "graduationNote": "현역은 입영 6주차 화요일 10시에 수료식을 해요(화요일이 공휴일이거나 연대에 따라 수요일). 자대 배치 결과는 수료식 날 13시쯤 문자로 와요.",
+      "family": "참석할 수 있어요. 모바일 초청장이 수료 1주 전 부모 휴대폰으로 와요. 8시 30분부터 입장, 수료식 뒤 16시까지 논산 일대에서 외출·면회.",
+      "letterNote": "훈련병도 주말·공휴일에 휴대폰을 1시간씩 쓸 수 있어요(2023년 7월부터, 모든 군 공통). 더캠프 위문편지가 훈련병에게 출력돼 전달되는지는 확인 중이에요.",
+      "parcelNote": "소포는 의약품과 안경만 받아요. 입고 간 사복은 입영 다음 주 금요일쯤 집으로 와요.",
+      "required": [
+        {
+          "name": "휴대폰 1대 + 일체형 충전기",
+          "tip": "선이 분리되는 USB 충전기는 안 돼요. 주말·공휴일 1시간 쓸 수 있어요."
+        },
+        {
+          "name": "평소 먹던 약",
+          "tip": "당뇨·고혈압·피부약 등. 군의관 확인 뒤 먹어요."
+        },
+        {
+          "name": "여분 안경 + 안경 고정 고무줄",
+          "tip": "렌즈는 세척 시간이 없어 못 껴요. 시력이 낮으면 평소 안경 꼭."
+        },
+        {
+          "name": "스킨·로션·선크림·폼클렌징",
+          "tip": "튜브나 플라스틱 용기에 든 것만. 유리병은 안 돼요."
+        },
+        {
+          "name": "증명사진 (정면·측면)",
+          "tip": "육군훈련소 준비사항에 있어요. 규격은 공지에 따로 없어요."
+        }
+      ],
+      "recommended": [
+        {
+          "name": "전자시계 (알람·방수)",
+          "tip": "커뮤니티에서 많이 꼽는 품목. 스마트워치는 제한·충전 문제로 비추천. 공식 반입 기준은 확인 중이에요.",
+          "buy": true,
+          "link": null
+        },
+        {
+          "name": "립밤·선크림",
+          "tip": "튜브형이면 공식적으로 가져갈 수 있어요.",
+          "buy": true,
+          "link": null
+        },
+        {
+          "name": "수면용 귀마개",
+          "tip": "커뮤니티 추천 품목. 공식 기준은 확인 중이에요.",
+          "buy": true,
+          "link": null
+        }
+      ],
+      "skip": [
+        {
+          "name": "세면도구 가방"
+        },
+        {
+          "name": "양말"
+        },
+        {
+          "name": "손톱깎이"
+        },
+        {
+          "name": "전투화 깔창",
+          "tip": "지급돼요. 그래도 사 간다면 얇은 것으로."
+        },
+        {
+          "name": "상비약"
+        },
+        {
+          "name": "군번줄"
+        },
+        {
+          "name": "바느질 세트"
+        },
+        {
+          "name": "펜·군인수첩"
+        },
+        {
+          "name": "현금",
+          "tip": "훈련소 생활비는 급여에서 나가요. 나라사랑카드에 소액만 넣어 두면 돼요."
+        }
+      ],
+      "banned": [
+        {
+          "name": "귀중품·전자제품",
+          "tip": "전기면도기, 디지털카메라 등"
+        },
+        {
+          "name": "목걸이·반지 같은 액세서리"
+        },
+        {
+          "name": "담배·전자담배·라이터"
+        },
+        {
+          "name": "콘택트렌즈",
+          "tip": "세척 시간이 보장되지 않아 착용이 제한돼요."
+        }
+      ],
+      "sources": [
+        {
+          "label": "육군훈련소 입영준비사항",
+          "url": "https://www.katc.mil.kr/katc/guide/preparation.jsp"
+        },
+        {
+          "label": "육군훈련소 수료행사 안내",
+          "url": "https://www.katc.mil.kr/katc/guide/event_guide.jsp"
+        },
+        {
+          "label": "육군훈련소 행사일정",
+          "url": "https://www.katc.mil.kr/katc/guide/schedule.jsp"
+        },
+        {
+          "label": "병무청 입영안내",
+          "url": "https://www.mma.go.kr/contents.do?mc=mma0000739"
+        }
+      ]
+    },
+    {
+      "docs": [],
+      "phone": "",
+      "lastVerified": "2026-11-14",
+      "id": "division",
+      "name": "사단 신병교육대",
+      "short": "사단 신교대",
+      "branch": "army",
+      "kind": "division",
+      "weeks": 6,
+      "durationLabel": "6주 훈련",
+      "graduationWeekday": 3,
+      "graduationNote": "확인된 신교대 수료식 25건 가운데 24건이 6주차 수요일이었어요(12사단은 공식 일정표로 확인). 설·추석이 낀 기수는 7주차로 밀리고, 선거일과 겹치면 하루 당겨지기도 해요. 부대 배치 결과는 지상작전사령부 신교대 3주차 금요일, 제2작전사령부 신교대 4주차 목요일에 나와요.",
+      "family": "사단마다 달라요. 사단을 고르면 확인된 내용을 보여 줘요.",
+      "letterNote": "훈련병도 주말·공휴일에 휴대폰을 1시간씩 쓸 수 있어요(2023년 7월부터, 모든 군 공통). 육군 신교대 인터넷 편지 출력은 2023년에 없앤다고 발표됐어요.",
+      "parcelNote": "가져가면 안 되는 물건은 부대가 거둬서 집으로 돌려보내요.",
+      "required": [
+        {
+          "name": "휴대폰 1대 + 일체형 충전기",
+          "tip": "선이 분리되는 USB 충전기는 안 돼요. 주말·공휴일 1시간 쓸 수 있어요. (육군훈련소 기준)"
+        },
+        {
+          "name": "평소 먹던 약",
+          "tip": "당뇨·고혈압·피부약 등. 군의관 확인 뒤 먹어요. (육군훈련소 기준)"
+        },
+        {
+          "name": "여분 안경 + 안경 고정 고무줄",
+          "tip": "렌즈는 세척 시간이 없어 못 껴요. 시력이 낮으면 평소 안경 꼭. (육군훈련소 기준)"
+        },
+        {
+          "name": "스킨·로션·선크림·폼클렌징",
+          "tip": "튜브나 플라스틱 용기에 든 것만. 유리병은 안 돼요. (육군훈련소 기준)"
+        },
+        {
+          "name": "증명사진 (정면·측면)",
+          "tip": "육군훈련소 준비사항에 있어요. 규격은 공지에 따로 없어요. (육군훈련소 기준)"
+        }
+      ],
+      "recommended": [
+        {
+          "name": "전자시계 (알람·방수)",
+          "tip": "커뮤니티에서 많이 꼽는 품목. 스마트워치는 제한·충전 문제로 비추천. 공식 반입 기준은 확인 중이에요.",
+          "buy": true,
+          "link": null
+        },
+        {
+          "name": "립밤·선크림",
+          "tip": "튜브형이면 공식적으로 가져갈 수 있어요.",
+          "buy": true,
+          "link": null
+        },
+        {
+          "name": "수면용 귀마개",
+          "tip": "커뮤니티 추천 품목. 공식 기준은 확인 중이에요.",
+          "buy": true,
+          "link": null
+        }
+      ],
+      "skip": [
+        {
+          "name": "세면도구 가방",
+          "tip": "(육군훈련소 기준)"
+        },
+        {
+          "name": "양말",
+          "tip": "(육군훈련소 기준)"
+        },
+        {
+          "name": "손톱깎이",
+          "tip": "(육군훈련소 기준)"
+        },
+        {
+          "name": "전투화 깔창",
+          "tip": "지급돼요. 그래도 사 간다면 얇은 것으로. (육군훈련소 기준)"
+        },
+        {
+          "name": "상비약",
+          "tip": "(육군훈련소 기준)"
+        },
+        {
+          "name": "군번줄",
+          "tip": "(육군훈련소 기준)"
+        },
+        {
+          "name": "바느질 세트",
+          "tip": "(육군훈련소 기준)"
+        },
+        {
+          "name": "펜·군인수첩",
+          "tip": "(육군훈련소 기준)"
+        },
+        {
+          "name": "현금",
+          "tip": "훈련소 생활비는 급여에서 나가요. 나라사랑카드에 소액만 넣어 두면 돼요. (육군훈련소 기준)"
+        }
+      ],
+      "banned": [
+        {
+          "name": "귀중품·전자제품",
+          "tip": "전기면도기, 디지털카메라 등 (육군훈련소 기준)"
+        },
+        {
+          "name": "목걸이·반지 같은 액세서리",
+          "tip": "(육군훈련소 기준)"
+        },
+        {
+          "name": "담배·전자담배·라이터",
+          "tip": "(육군훈련소 기준)"
+        },
+        {
+          "name": "콘택트렌즈",
+          "tip": "세척 시간이 보장되지 않아 착용이 제한돼요. (육군훈련소 기준)"
+        }
+      ],
+      "sources": [
+        {
+          "label": "병무청 입영안내",
+          "url": "https://www.mma.go.kr/contents.do?mc=mma0000739"
+        },
+        {
+          "label": "육군 신병 부대배치 안내",
+          "url": "https://www.army.mil.kr/unitarng/searchRST.do"
+        },
+        {
+          "label": "병무청 입영부대 가는 길",
+          "url": "https://www.mma.go.kr/contents.do?mc=mma0002049"
+        },
+        {
+          "label": "인제군 12사단 수료 일정",
+          "url": "https://www.inje.go.kr/mobile/inje/militaryinfo?articleSeq=248945"
+        }
+      ],
+      "divisions": [
+        {
+          "id": "3",
+          "name": "3사단",
+          "nick": "백골부대",
+          "place": "강원 철원군 서면",
+          "command": "지상작전사령부",
+          "mmaUrl": "https://www.mma.go.kr/contents.do?mc=mma0002049",
+          "cases": [
+            {
+              "date": "2025-10-01",
+              "url": "https://www.nbntv.co.kr/news/articleView.html?idxno=4010237"
+            }
+          ],
+          "family": "가족이 참석했어요(2025년 보도).",
+          "note": "",
+          "graduationWeekday": 3,
+          "warning": ""
+        },
+        {
+          "id": "5",
+          "name": "5사단",
+          "nick": "열쇠부대",
+          "place": "경기 연천군 청산면",
+          "command": "지상작전사령부",
+          "mmaUrl": "https://www.mma.go.kr/contents.do?mc=mma0002050",
+          "cases": [
+            {
+              "date": "2025-09-17",
+              "url": "http://www.seoulilbo.com/news/articleView.html?idxno=770052"
+            }
+          ],
+          "family": "장병·가족 1,000여 명이 참석했어요(2025년 보도).",
+          "note": "",
+          "graduationWeekday": 3,
+          "warning": ""
+        },
+        {
+          "id": "6",
+          "name": "6사단",
+          "nick": "청성부대",
+          "place": "강원 철원군 동송읍",
+          "command": "지상작전사령부",
+          "mmaUrl": "https://www.mma.go.kr/contents.do?mc=mma0002051",
+          "cases": [],
+          "family": "",
+          "note": "",
+          "graduationWeekday": 3,
+          "warning": "2026년 3월 신병교육대를 없앴다는 이야기가 있지만 공식 근거를 찾지 못했어요. 입영통지서의 부대를 꼭 확인하세요."
+        },
+        {
+          "id": "7",
+          "name": "7사단",
+          "nick": "칠성부대",
+          "place": "강원 화천군 화천읍",
+          "command": "지상작전사령부",
+          "mmaUrl": "https://www.mma.go.kr/contents.do?mc=mma0002052",
+          "cases": [
+            {
+              "date": "2024-08-07",
+              "url": "https://www.ihc.go.kr/photo/selectPhotoInfoWebView.do?key=2304&ctgryNo=1&photoInfoNo=10375&pageUnit=12"
+            },
+            {
+              "date": "2024-04-17",
+              "url": "https://www.gwnews.org/news/articleView.html?idxno=245362"
+            }
+          ],
+          "family": "화천체육관에서 열리고 면회객이 참석해요(화천군).",
+          "note": "",
+          "graduationWeekday": 3,
+          "warning": ""
+        },
+        {
+          "id": "12",
+          "name": "12사단",
+          "nick": "을지부대",
+          "place": "강원 인제군 북면",
+          "command": "지상작전사령부",
+          "mmaUrl": "https://www.mma.go.kr/contents.do?mc=mma0002056",
+          "cases": [
+            {
+              "date": "2026-11-18",
+              "url": "https://www.inje.go.kr/mobile/inje/militaryinfo?articleSeq=248945"
+            },
+            {
+              "date": "2026-12-09",
+              "url": "https://www.inje.go.kr/mobile/inje/militaryinfo?articleSeq=248945"
+            }
+          ],
+          "family": "",
+          "note": "인제군청 공식 일정표 기준 월요일 입소, 6주차 수요일 수료예요. 2026년 지방선거 날은 하루 당겨 화요일에 했어요. 신교대 033-462-4418.",
+          "graduationWeekday": 3,
+          "warning": ""
+        },
+        {
+          "id": "15",
+          "name": "15사단",
+          "nick": "승리부대",
+          "place": "강원 화천군 사내면",
+          "command": "지상작전사령부",
+          "mmaUrl": "https://www.mma.go.kr/contents.do?mc=mma0002057",
+          "cases": [
+            {
+              "date": "2026-10-21",
+              "url": "https://localsegye.co.kr/news/view/1065580291150289"
+            },
+            {
+              "date": "2024-04-03",
+              "url": "https://kwnews.co.kr/article/202404030144537"
+            }
+          ],
+          "family": "사내복합체육관에서 열리고, 수료 뒤 사내면 일대에서 가족과 외출해 18시 30분까지 지내요(2024년 보도).",
+          "note": "",
+          "graduationWeekday": 3,
+          "warning": ""
+        },
+        {
+          "id": "21",
+          "name": "21사단",
+          "nick": "백두산부대",
+          "place": "강원 양구군 국토정중앙면",
+          "command": "지상작전사령부",
+          "mmaUrl": "https://www.mma.go.kr/contents.do?mc=mma0002048",
+          "cases": [
+            {
+              "date": "2026-06-17",
+              "url": "https://www.kado.net/news/articleView.html?idxno=2056580"
+            },
+            {
+              "date": "2024-05-22",
+              "url": "https://www.chamnews.net/news/articleView.html?idxno=225559"
+            }
+          ],
+          "family": "양구 청춘체육관에서 가족이 참석했어요(2024년 보도).",
+          "note": "",
+          "graduationWeekday": 3,
+          "warning": ""
+        },
+        {
+          "id": "31",
+          "name": "31사단",
+          "nick": "충장신병교육대",
+          "place": "광주 북구 오치동",
+          "command": "제2작전사령부",
+          "mmaUrl": "https://www.mma.go.kr/contents.do?mc=mma0002068",
+          "cases": [],
+          "family": "",
+          "note": "",
+          "graduationWeekday": 3,
+          "warning": ""
+        },
+        {
+          "id": "32",
+          "name": "32사단",
+          "nick": "백룡부대",
+          "place": "세종 금남면",
+          "command": "제2작전사령부",
+          "mmaUrl": "https://www.mma.go.kr/contents.do?mc=mma0002069",
+          "cases": [
+            {
+              "date": "2024-05-08",
+              "url": "https://www.newsis.com/view/NISX20240508_0002727178"
+            }
+          ],
+          "family": "가족이 참석했어요(2024년 보도).",
+          "note": "",
+          "graduationWeekday": 3,
+          "warning": ""
+        },
+        {
+          "id": "35",
+          "name": "35사단",
+          "nick": "충경신병교육대",
+          "place": "전북 임실군 임실읍",
+          "command": "제2작전사령부",
+          "mmaUrl": "https://www.mma.go.kr/contents.do?mc=mma0002070",
+          "cases": [
+            {
+              "date": "2026-05-20",
+              "url": "https://www.newsis.com/view/NISX20260520_0003638188"
+            }
+          ],
+          "family": "가족 700여 명이 참석했어요(2026년 보도).",
+          "note": "",
+          "graduationWeekday": 3,
+          "warning": ""
+        },
+        {
+          "id": "36",
+          "name": "36사단",
+          "nick": "백호부대",
+          "place": "강원 원주시 소초면",
+          "command": "지상작전사령부",
+          "mmaUrl": "https://www.mma.go.kr/contents.do?mc=mma0002071",
+          "cases": [
+            {
+              "date": "2026-01-21",
+              "url": "https://www.fnnews.com/news/202601211136418297"
+            },
+            {
+              "date": "2025-01-15",
+              "url": "https://www.gukjenews.com/news/articleView.html?idxno=3182379"
+            }
+          ],
+          "family": "가족이 참석하고, 수료식 뒤 외출로 가족과 만나요(2025년 보도). 시간은 공지를 확인하세요.",
+          "note": "",
+          "graduationWeekday": 3,
+          "warning": ""
+        },
+        {
+          "id": "37",
+          "name": "37사단",
+          "nick": "충용신병교육대",
+          "place": "충북 증평군 증평읍",
+          "command": "제2작전사령부",
+          "mmaUrl": "https://www.mma.go.kr/contents.do?mc=mma0002072",
+          "cases": [],
+          "family": "",
+          "note": "",
+          "graduationWeekday": 3,
+          "warning": ""
+        },
+        {
+          "id": "39",
+          "name": "39사단",
+          "nick": "충무신병교육대",
+          "place": "경남 함안군 군북면",
+          "command": "제2작전사령부",
+          "mmaUrl": "https://www.mma.go.kr/contents.do?mc=mma0002073",
+          "cases": [],
+          "family": "",
+          "note": "",
+          "graduationWeekday": 3,
+          "warning": ""
+        },
+        {
+          "id": "50",
+          "name": "50사단",
+          "nick": "강철부대",
+          "place": "대구 북구 학정동",
+          "command": "제2작전사령부",
+          "mmaUrl": "https://www.mma.go.kr/contents.do?mc=mma0002074",
+          "cases": [
+            {
+              "date": "2025-01-24",
+              "url": "https://www.news1.kr/local/daegu-gyeongbuk/5672640"
+            }
+          ],
+          "family": "가족이 계급장을 달아 줬어요(2025년 보도).",
+          "note": "확인된 수료식이 금요일 1건뿐이라 요일을 정하지 않고 주간으로 보여 줘요.",
+          "graduationWeekday": 0,
+          "warning": ""
+        },
+        {
+          "id": "51",
+          "name": "51사단",
+          "nick": "전승부대",
+          "place": "경기 화성시 매송면",
+          "command": "지상작전사령부",
+          "mmaUrl": "https://www.mma.go.kr/contents.do?mc=mma0002075",
+          "cases": [],
+          "family": "",
+          "note": "",
+          "graduationWeekday": 3,
+          "warning": ""
+        },
+        {
+          "id": "55",
+          "name": "55사단",
+          "nick": "",
+          "place": "경기 용인시 처인구 포곡읍",
+          "command": "지상작전사령부",
+          "mmaUrl": "https://www.mma.go.kr/contents.do?mc=mma0002077",
+          "cases": [],
+          "family": "",
+          "note": "입영 장소는 사단 사령부예요. 봉화신병교육대(동부로443번길)로 가지 않도록 병무청이 따로 안내해요.",
+          "graduationWeekday": 3,
+          "warning": ""
+        }
+      ]
+    },
+    {
+      "docs": [],
+      "phone": "",
+      "lastVerified": "2026-11-14",
+      "id": "navy",
+      "name": "해군교육사령부(진해)",
+      "short": "해군(진해)",
+      "branch": "navy",
+      "kind": "navy",
+      "weeks": 5,
+      "durationLabel": "5주 훈련",
+      "graduationWeekday": 5,
+      "graduationNote": "최근 수료식이 모두 금요일이었어요(2025년 8월·12월, 2026년 4월 보도). 정확한 날짜는 부대 안내를 확인하세요.",
+      "family": "참석할 수 있어요. 가족이 정모를 씌워 주는 순서가 있었어요. 수료 뒤 면회·외출 규정은 확인 중이에요.",
+      "letterNote": "훈련병도 주말·공휴일에 휴대폰을 1시간씩 쓸 수 있어요(2023년 7월부터, 모든 군 공통). 더캠프에서 해군 위문편지를 지원해요.",
+      "parcelNote": "가져가면 안 되는 물건은 부대가 거둬서 집으로 돌려보내요.",
+      "required": [
+        {
+          "name": "휴대폰 1대 + 일체형 충전기",
+          "tip": "선이 분리되는 USB 충전기는 안 돼요. 주말·공휴일 1시간 쓸 수 있어요. (육군훈련소 기준)"
+        },
+        {
+          "name": "평소 먹던 약",
+          "tip": "당뇨·고혈압·피부약 등. 군의관 확인 뒤 먹어요. (육군훈련소 기준)"
+        },
+        {
+          "name": "여분 안경 + 안경 고정 고무줄",
+          "tip": "렌즈는 세척 시간이 없어 못 껴요. 시력이 낮으면 평소 안경 꼭. (육군훈련소 기준)"
+        },
+        {
+          "name": "스킨·로션·선크림·폼클렌징",
+          "tip": "튜브나 플라스틱 용기에 든 것만. 유리병은 안 돼요. (육군훈련소 기준)"
+        },
+        {
+          "name": "증명사진 (정면·측면)",
+          "tip": "육군훈련소 준비사항에 있어요. 규격은 공지에 따로 없어요. (육군훈련소 기준)"
+        }
+      ],
+      "recommended": [
+        {
+          "name": "전자시계 (알람·방수)",
+          "tip": "커뮤니티에서 많이 꼽는 품목. 스마트워치는 제한·충전 문제로 비추천. 공식 반입 기준은 확인 중이에요.",
+          "buy": true,
+          "link": null
+        },
+        {
+          "name": "립밤·선크림",
+          "tip": "튜브형이면 공식적으로 가져갈 수 있어요.",
+          "buy": true,
+          "link": null
+        },
+        {
+          "name": "수면용 귀마개",
+          "tip": "커뮤니티 추천 품목. 공식 기준은 확인 중이에요.",
+          "buy": true,
+          "link": null
+        }
+      ],
+      "skip": [],
+      "banned": [
+        {
+          "name": "귀중품·전자제품",
+          "tip": "전기면도기, 디지털카메라 등 (육군훈련소 기준)"
+        },
+        {
+          "name": "목걸이·반지 같은 액세서리",
+          "tip": "(육군훈련소 기준)"
+        },
+        {
+          "name": "담배·전자담배·라이터",
+          "tip": "(육군훈련소 기준)"
+        },
+        {
+          "name": "콘택트렌즈",
+          "tip": "세척 시간이 보장되지 않아 착용이 제한돼요. (육군훈련소 기준)"
+        }
+      ],
+      "sources": [
+        {
+          "label": "병무청 입영안내",
+          "url": "https://www.mma.go.kr/contents.do?mc=mma0000739"
+        },
+        {
+          "label": "뉴시스 해군 수료식(2025)",
+          "url": "https://mobile.newsis.com/view/NISX20250801_0003275952"
+        },
+        {
+          "label": "쿠키뉴스 해군 수료식(2025)",
+          "url": "https://www.kukinews.com/article/view/kuk202512120164"
+        }
+      ]
+    },
+    {
+      "docs": [],
+      "phone": "",
+      "lastVerified": "2026-11-14",
+      "id": "airforce",
+      "name": "공군 기본군사훈련단(진주)",
+      "short": "공군(진주)",
+      "branch": "airforce",
+      "kind": "airforce",
+      "weeks": 5,
+      "durationLabel": "5주 훈련 (가입교 1주 + 신병교육 4주)",
+      "graduationWeekday": 0,
+      "graduationNote": "공군 수료식 요일은 공식 안내를 확인하지 못해 5주차 주간으로만 보여 줘요.",
+      "family": "확인 중이에요. 공군 기본군사훈련단 누리집 안내를 보세요.",
+      "letterNote": "훈련병도 주말·공휴일에 휴대폰을 1시간씩 쓸 수 있어요(2023년 7월부터, 모든 군 공통). 더캠프에서 공군 위문편지를 지원해요.",
+      "parcelNote": "가져가면 안 되는 물건은 부대가 거둬서 집으로 돌려보내요.",
+      "required": [
+        {
+          "name": "휴대폰 1대 + 일체형 충전기",
+          "tip": "선이 분리되는 USB 충전기는 안 돼요. 주말·공휴일 1시간 쓸 수 있어요. (육군훈련소 기준)"
+        },
+        {
+          "name": "평소 먹던 약",
+          "tip": "당뇨·고혈압·피부약 등. 군의관 확인 뒤 먹어요. (육군훈련소 기준)"
+        },
+        {
+          "name": "여분 안경 + 안경 고정 고무줄",
+          "tip": "렌즈는 세척 시간이 없어 못 껴요. 시력이 낮으면 평소 안경 꼭. (육군훈련소 기준)"
+        },
+        {
+          "name": "스킨·로션·선크림·폼클렌징",
+          "tip": "튜브나 플라스틱 용기에 든 것만. 유리병은 안 돼요. (육군훈련소 기준)"
+        },
+        {
+          "name": "증명사진 (정면·측면)",
+          "tip": "육군훈련소 준비사항에 있어요. 규격은 공지에 따로 없어요. (육군훈련소 기준)"
+        }
+      ],
+      "recommended": [
+        {
+          "name": "전자시계 (알람·방수)",
+          "tip": "커뮤니티에서 많이 꼽는 품목. 스마트워치는 제한·충전 문제로 비추천. 공식 반입 기준은 확인 중이에요.",
+          "buy": true,
+          "link": null
+        },
+        {
+          "name": "립밤·선크림",
+          "tip": "튜브형이면 공식적으로 가져갈 수 있어요.",
+          "buy": true,
+          "link": null
+        },
+        {
+          "name": "수면용 귀마개",
+          "tip": "커뮤니티 추천 품목. 공식 기준은 확인 중이에요.",
+          "buy": true,
+          "link": null
+        }
+      ],
+      "skip": [],
+      "banned": [
+        {
+          "name": "귀중품·전자제품",
+          "tip": "전기면도기, 디지털카메라 등 (육군훈련소 기준)"
+        },
+        {
+          "name": "목걸이·반지 같은 액세서리",
+          "tip": "(육군훈련소 기준)"
+        },
+        {
+          "name": "담배·전자담배·라이터",
+          "tip": "(육군훈련소 기준)"
+        },
+        {
+          "name": "콘택트렌즈",
+          "tip": "세척 시간이 보장되지 않아 착용이 제한돼요. (육군훈련소 기준)"
+        }
+      ],
+      "sources": [
+        {
+          "label": "병무청 입영안내",
+          "url": "https://www.mma.go.kr/contents.do?mc=mma0000739"
+        },
+        {
+          "label": "청년일보 공군 신병교육(2026)",
+          "url": "https://www.youthdaily.co.kr/mobile/article.html?no=215249"
+        }
+      ]
+    },
+    {
+      "docs": [],
+      "phone": "",
+      "lastVerified": "2026-11-14",
+      "id": "marine",
+      "name": "해병대 교육훈련단(포항)",
+      "short": "해병대(포항)",
+      "branch": "marine",
+      "kind": "marine",
+      "weeks": 6,
+      "durationLabel": "6주 훈련",
+      "graduationWeekday": 4,
+      "graduationNote": "최근 수료식이 모두 목요일이었어요(2025~2026년 보도). 정확한 날짜는 부대 안내를 확인하세요.",
+      "family": "참석할 수 있어요. 2026년 수료식에는 가족·지인 약 4,000명이 왔고, 수료 뒤 연병장에서 5시간쯤 면회했어요.",
+      "letterNote": "훈련병도 주말·공휴일에 휴대폰을 1시간씩 쓸 수 있어요(2023년 7월부터, 모든 군 공통). 더캠프에서 해병대 위문편지를 지원해요.",
+      "parcelNote": "가져가면 안 되는 물건은 부대가 거둬서 집으로 돌려보내요.",
+      "required": [
+        {
+          "name": "휴대폰 1대 + 일체형 충전기",
+          "tip": "선이 분리되는 USB 충전기는 안 돼요. 주말·공휴일 1시간 쓸 수 있어요. (육군훈련소 기준)"
+        },
+        {
+          "name": "평소 먹던 약",
+          "tip": "당뇨·고혈압·피부약 등. 군의관 확인 뒤 먹어요. (육군훈련소 기준)"
+        },
+        {
+          "name": "여분 안경 + 안경 고정 고무줄",
+          "tip": "렌즈는 세척 시간이 없어 못 껴요. 시력이 낮으면 평소 안경 꼭. (육군훈련소 기준)"
+        },
+        {
+          "name": "스킨·로션·선크림·폼클렌징",
+          "tip": "튜브나 플라스틱 용기에 든 것만. 유리병은 안 돼요. (육군훈련소 기준)"
+        },
+        {
+          "name": "증명사진 (정면·측면)",
+          "tip": "육군훈련소 준비사항에 있어요. 규격은 공지에 따로 없어요. (육군훈련소 기준)"
+        }
+      ],
+      "recommended": [
+        {
+          "name": "전자시계 (알람·방수)",
+          "tip": "커뮤니티에서 많이 꼽는 품목. 스마트워치는 제한·충전 문제로 비추천. 공식 반입 기준은 확인 중이에요.",
+          "buy": true,
+          "link": null
+        },
+        {
+          "name": "립밤·선크림",
+          "tip": "튜브형이면 공식적으로 가져갈 수 있어요.",
+          "buy": true,
+          "link": null
+        },
+        {
+          "name": "수면용 귀마개",
+          "tip": "커뮤니티 추천 품목. 공식 기준은 확인 중이에요.",
+          "buy": true,
+          "link": null
+        }
+      ],
+      "skip": [
+        {
+          "name": "전투화·운동화·축구화"
+        },
+        {
+          "name": "양말·기능성 티셔츠·수건"
+        },
+        {
+          "name": "세면백·칫솔·치약·면도기"
+        },
+        {
+          "name": "손톱깎이·세탁세제"
+        }
+      ],
+      "banned": [
+        {
+          "name": "귀중품·전자제품",
+          "tip": "전기면도기, 디지털카메라 등 (육군훈련소 기준)"
+        },
+        {
+          "name": "목걸이·반지 같은 액세서리",
+          "tip": "(육군훈련소 기준)"
+        },
+        {
+          "name": "담배·전자담배·라이터",
+          "tip": "(육군훈련소 기준)"
+        },
+        {
+          "name": "콘택트렌즈",
+          "tip": "세척 시간이 보장되지 않아 착용이 제한돼요. (육군훈련소 기준)"
+        }
+      ],
+      "sources": [
+        {
+          "label": "병무청 입영안내",
+          "url": "https://www.mma.go.kr/contents.do?mc=mma0000739"
+        },
+        {
+          "label": "해병대 교육훈련단 보급품",
+          "url": "http://etg.rokmc.mil.kr/content/view.do?sMenuKey=58&searchContentKey=27"
+        },
+        {
+          "label": "경북매일 해병대 수료식(2026)",
+          "url": "https://kbmaeil.com/article/20260903500652"
+        }
+      ]
+    },
+    {
+      "docs": [],
+      "phone": "육군훈련소 대표 041-740-7777",
+      "lastVerified": "2026-11-14",
+      "id": "social",
+      "name": "보충역 기초군사훈련",
+      "short": "사회복무요원 훈련",
+      "branch": "social",
+      "kind": "social",
+      "weeks": 4,
+      "durationLabel": "3주 훈련 (목요일 입영 → 3주 뒤 목요일 수료·귀가)",
+      "graduationWeekday": 4,
+      "graduationNote": "보충역은 목요일에 입영해 3주 뒤 목요일에 수료하고 바로 집에 와요. 훈련받는 곳은 통지서를 확인하세요.",
+      "family": "수료 뒤 바로 귀가해요.",
+      "letterNote": "훈련병도 주말·공휴일에 휴대폰을 1시간씩 쓸 수 있어요(2023년 7월부터, 모든 군 공통).",
+      "parcelNote": "입고 간 사복은 수료할 때 돌려받아요.",
+      "required": [
+        {
+          "name": "휴대폰 1대 + 일체형 충전기",
+          "tip": "선이 분리되는 USB 충전기는 안 돼요. 주말·공휴일 1시간 쓸 수 있어요."
+        },
+        {
+          "name": "평소 먹던 약",
+          "tip": "당뇨·고혈압·피부약 등. 군의관 확인 뒤 먹어요."
+        },
+        {
+          "name": "여분 안경 + 안경 고정 고무줄",
+          "tip": "렌즈는 세척 시간이 없어 못 껴요. 시력이 낮으면 평소 안경 꼭."
+        },
+        {
+          "name": "스킨·로션·선크림·폼클렌징",
+          "tip": "튜브나 플라스틱 용기에 든 것만. 유리병은 안 돼요."
+        },
+        {
+          "name": "증명사진 (정면·측면)",
+          "tip": "육군훈련소 준비사항에 있어요. 규격은 공지에 따로 없어요."
+        }
+      ],
+      "recommended": [
+        {
+          "name": "전자시계 (알람·방수)",
+          "tip": "커뮤니티에서 많이 꼽는 품목. 스마트워치는 제한·충전 문제로 비추천. 공식 반입 기준은 확인 중이에요.",
+          "buy": true,
+          "link": null
+        },
+        {
+          "name": "립밤·선크림",
+          "tip": "튜브형이면 공식적으로 가져갈 수 있어요.",
+          "buy": true,
+          "link": null
+        },
+        {
+          "name": "수면용 귀마개",
+          "tip": "커뮤니티 추천 품목. 공식 기준은 확인 중이에요.",
+          "buy": true,
+          "link": null
+        }
+      ],
+      "skip": [
+        {
+          "name": "세면도구 가방"
+        },
+        {
+          "name": "양말"
+        },
+        {
+          "name": "손톱깎이"
+        },
+        {
+          "name": "전투화 깔창",
+          "tip": "지급돼요. 그래도 사 간다면 얇은 것으로."
+        },
+        {
+          "name": "상비약"
+        },
+        {
+          "name": "군번줄"
+        },
+        {
+          "name": "바느질 세트"
+        },
+        {
+          "name": "펜·군인수첩"
+        },
+        {
+          "name": "현금",
+          "tip": "훈련소 생활비는 급여에서 나가요. 나라사랑카드에 소액만 넣어 두면 돼요."
+        }
+      ],
+      "banned": [
+        {
+          "name": "귀중품·전자제품",
+          "tip": "전기면도기, 디지털카메라 등"
+        },
+        {
+          "name": "목걸이·반지 같은 액세서리"
+        },
+        {
+          "name": "담배·전자담배·라이터"
+        },
+        {
+          "name": "콘택트렌즈",
+          "tip": "세척 시간이 보장되지 않아 착용이 제한돼요."
+        }
+      ],
+      "sources": [
+        {
+          "label": "육군훈련소 입영준비사항",
+          "url": "https://www.katc.mil.kr/katc/guide/preparation.jsp"
+        },
+        {
+          "label": "육군훈련소 수료행사 안내",
+          "url": "https://www.katc.mil.kr/katc/guide/event_guide.jsp"
+        },
+        {
+          "label": "병무청 입영안내",
+          "url": "https://www.mma.go.kr/contents.do?mc=mma0000739"
+        }
+      ]
+    }
+  ]
+}

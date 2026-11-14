@@ -1,0 +1,114 @@
+{
+  "year": 2027,
+  "basis": "2027년 병 봉급은 아직 발표 전이라 2026년 금액으로 계산했어요",
+  "status": "proposed",
+  "pay": {
+    "pvt": 750000,
+    "pfc": 900000,
+    "cpl": 1200000,
+    "sgt": 1500000
+  },
+  "savings": {
+    "monthlyCapPerPerson": 550000,
+    "monthlyCapPerBank": 300000,
+    "matchingRate": 1,
+    "matchingMonthlyCap": 550000,
+    "baseRate": 0.05,
+    "bonusRate": 0,
+    "socialEligible": true,
+    "note": "은행별 월 30만 원, 두 은행 합쳐 월 55만 원까지 넣을 수 있어요. 정부가 넣은 돈의 100%를 전역 후 만기 해지 때 한꺼번에 줘요. 중도해지하면 매칭과 비과세가 없어져요. 금리는 은행마다 달라 연 5%로 가정했어요."
+  },
+  "social": {
+    "mealPerDay": 9000,
+    "transportPerDay": 0,
+    "workDaysPerMonth": 20,
+    "note": "중식비는 출근한 날만 하루 9,000원, 교통비는 실제 대중교통 왕복 요금이라 계산에서 뺐어요."
+  },
+  "branches": {
+    "army": {
+      "name": "육군",
+      "serviceMonths": 18,
+      "promotionMonths": {
+        "pvt": 2,
+        "pfc": 6,
+        "cpl": 6
+      },
+      "annualLeaveDays": 24,
+      "leaveNote": "연가 일수는 공식 원문 확인 전이라 흔히 알려진 값이에요. 포상·위로휴가는 부대마다 달라요."
+    },
+    "marine": {
+      "name": "해병대",
+      "serviceMonths": 18,
+      "promotionMonths": {
+        "pvt": 2,
+        "pfc": 6,
+        "cpl": 6
+      },
+      "annualLeaveDays": 24,
+      "leaveNote": "연가 일수는 공식 원문 확인 전이라 흔히 알려진 값이에요. 포상·위로휴가는 부대마다 달라요."
+    },
+    "navy": {
+      "name": "해군",
+      "serviceMonths": 20,
+      "promotionMonths": {
+        "pvt": 2,
+        "pfc": 6,
+        "cpl": 6
+      },
+      "annualLeaveDays": 27,
+      "leaveNote": "연가 일수는 공식 원문 확인 전이라 흔히 알려진 값이에요. 포상·위로휴가는 부대마다 달라요."
+    },
+    "airforce": {
+      "name": "공군",
+      "serviceMonths": 21,
+      "promotionMonths": {
+        "pvt": 2,
+        "pfc": 6,
+        "cpl": 6
+      },
+      "annualLeaveDays": 28,
+      "leaveNote": "연가 일수는 공식 원문 확인 전이라 흔히 알려진 값이에요. 포상·위로휴가는 부대마다 달라요."
+    },
+    "social": {
+      "name": "사회복무요원",
+      "serviceMonths": 21,
+      "promotionMonths": {
+        "pvt": 2,
+        "pfc": 6,
+        "cpl": 6
+      },
+      "annualLeaveDays": 28,
+      "leaveNote": "병무청 기준 21개월 동안 연가 28일이에요. 공무 외 병가는 30일까지만 복무기간에 넣고, 넘긴 만큼 복무가 늘어요."
+    }
+  },
+  "dischargeAdjust": {
+    "enabled": false,
+    "note": "전역일이 주말·공휴일이어도 앞당기는 규정은 찾지 못해 날짜를 옮기지 않아요. 실제로는 말년휴가로 그 전에 나오는 경우가 많아요."
+  },
+  "reserve": {
+    "totalYears": 8,
+    "note": "전역한 다음 해가 1년차예요. 1~4년차는 동원훈련(2박 3일 또는 출퇴근 4일), 5~6년차는 지역 향방훈련, 7~8년차는 새 훈련 없이 밀린 훈련만 받아요."
+  },
+  "sources": [
+    {
+      "label": "e-나라지표 병 봉급",
+      "url": "https://www.index.go.kr/unify/idx-info.do?idxCd=1700"
+    },
+    {
+      "label": "국방부 장병내일준비적금",
+      "url": "https://www.mnd.go.kr/mnd/288/subview.do"
+    },
+    {
+      "label": "병무청 복무기간",
+      "url": "https://mma.go.kr/contents.do?mc=usr0000041"
+    },
+    {
+      "label": "병무청 사회복무요원 보수·휴가",
+      "url": "https://www.mma.go.kr/contents.do?mc=mma0000910"
+    },
+    {
+      "label": "병무청 예비군 편성",
+      "url": "https://www.mma.go.kr/contents.do?mc=mma0003402"
+    }
+  ]
+}

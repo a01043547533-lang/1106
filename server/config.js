@@ -3,9 +3,11 @@ import { loadEnv } from './repo/system.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const SERVER_DIR = __dirname;
-export const ROOT_DIR = path.resolve(__dirname, '..');
+// Next.js로 묶이면 import.meta.url이 빌드 결과 위치를 가리키므로 프로젝트 루트(실행 위치) 기준으로 잡는다.
+void fileURLToPath;
+export const ROOT_DIR = process.env.IPDAE_ROOT ? path.resolve(process.env.IPDAE_ROOT) : process.cwd();
+export const SERVER_DIR = path.join(ROOT_DIR, 'server');
+const __dirname = SERVER_DIR;
 if (process.env.VERCEL !== '1') {
   loadEnv(path.join(SERVER_DIR, '.env'));
   loadEnv(path.join(ROOT_DIR, '.env'));
