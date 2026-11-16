@@ -7,6 +7,7 @@ import Shell from "@/legacy/Shell.jsx";
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "https://www.ipdae.net";
 const g = process.env.GOOGLE_SITE_VERIFICATION;
 const n = process.env.NAVER_SITE_VERIFICATION;
+const b = process.env.BING_SITE_VERIFICATION;
 const ads = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || process.env.VITE_ADSENSE_CLIENT;
 
 export const metadata: Metadata = {
@@ -27,7 +28,10 @@ export const metadata: Metadata = {
   twitter: { card: "summary" },
   verification: {
     ...(g && /^[\w-]+$/.test(g) ? { google: g } : {}),
-    ...(n && /^[\w-]+$/.test(n) ? { other: { "naver-site-verification": n } } : {}),
+    ...(n || b ? { other: {
+      ...(n && /^[\w-]+$/.test(n) ? { "naver-site-verification": n } : {}),
+      ...(b && /^[\w-]+$/.test(b) ? { "msvalidate.01": b } : {}),
+    } } : {}),
   },
 };
 
