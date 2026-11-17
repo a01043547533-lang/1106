@@ -33,7 +33,8 @@ const urls = [
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 // 다음(Daum) 웹마스터도구 소유 확인: 사이트 등록 때 받은 값을 DAUM_WEBMASTER_TOOL에 넣으면 robots.txt에 한 줄 추가한다.
 const daum = (process.env.DAUM_WEBMASTER_TOOL || '').trim().replace(/^#?DaumWebMasterTool:/, '');
-const daumLine = /^[\w:.-]+$/.test(daum) ? `#DaumWebMasterTool:${daum}` : '';
+// 다음이 주는 값은 「해시:base64」 꼴이라 / + = 도 들어간다. 줄바꿈·공백만 없으면 된다.
+const daumLine = /^[\w:.\/+=-]+$/.test(daum) ? `#DaumWebMasterTool:${daum}` : '';
 const robots = ['User-agent: *', 'Allow: /', 'Disallow: /api/', 'Disallow: /status', 'Disallow: /contact', site ? `Sitemap: ${site}/sitemap.xml` : '', daumLine, ''].filter((l, i, a) => l !== '' || i === a.length - 1).join('\n');
 fs.writeFileSync(path.join(OUT, 'robots.txt'), robots);
 
