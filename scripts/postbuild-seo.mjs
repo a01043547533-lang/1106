@@ -35,7 +35,9 @@ const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, 
 const daum = (process.env.DAUM_WEBMASTER_TOOL || '').trim().replace(/^#?DaumWebMasterTool:/, '');
 // 다음이 주는 값은 「해시:base64」 꼴이라 / + = 도 들어간다. 줄바꿈·공백만 없으면 된다.
 const daumLine = /^[\w:.\/+=-]+$/.test(daum) ? `#DaumWebMasterTool:${daum}` : '';
-const robots = ['User-agent: *', 'Allow: /', 'Disallow: /api/', 'Disallow: /status', 'Disallow: /contact', site ? `Sitemap: ${site}/sitemap.xml` : '', daumLine, ''].filter((l, i, a) => l !== '' || i === a.length - 1).join('\n');
+// /api/·/status·/contact는 막지 않는다. 화면이 /api/로 내용을 불러오므로 막으면 구글이 빈 페이지로 본다.
+// 대신 /api/ 응답에는 X-Robots-Tag: noindex(next.config.ts), /status·/contact에는 noindex 메타가 붙어 색인되지 않는다.
+const robots = ['User-agent: *', 'Allow: /', site ? `Sitemap: ${site}/sitemap.xml` : '', daumLine, ''].filter((l, i, a) => l !== '' || i === a.length - 1).join('\n');
 fs.writeFileSync(path.join(OUT, 'robots.txt'), robots);
 
 // ads.txt — AdSense 게시자 ID(VITE_ADSENSE_CLIENT=ca-pub-숫자)가 있으면 Google 표준 한 줄로 만든다.

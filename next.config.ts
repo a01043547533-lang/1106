@@ -30,6 +30,11 @@ const nextConfig: NextConfig = {
       "./tests/**",
     ],
   },
+  // robots.txt에서 /api/를 막지 않는 대신(화면이 /api/로 내용을 불러와야 구글이 본문을 본다),
+  // API 응답(JSON·.ics)이 검색 결과에 뜨지 않게 색인 금지 헤더를 붙인다.
+  async headers() {
+    return [{ source: "/api/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex" }] }];
+  },
   async redirects() {
     return [
       { source: "/score", destination: "/calc", permanent: true },
