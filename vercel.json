@@ -4,5 +4,6 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
+  "ignoreCommand": "git log -1 --pretty=%s | grep -q '^chore(data): snapshots' && exit 0 || exit 1",
   "regions": ["icn1"]
 }
