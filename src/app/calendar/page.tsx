@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Calendar from "@/legacy/pages/Calendar.jsx";
 import ClientOnly from "@/legacy/ClientOnly.jsx";
+import { CalendarSummary } from "@/app/_seo/summaries";
+
+// 서버 HTML 본문(검색엔진·광고 심사용 요약)을 한 시간마다 새 자료로 다시 만든다.
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "모집병·사회복무요원·카투사 접수 일정 | 입대타이밍",
@@ -10,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <ClientOnly>
+    <ClientOnly fallback={<CalendarSummary />}>
       <Calendar />
     </ClientOnly>
   );

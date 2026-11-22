@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Calc from "@/legacy/pages/Calc.jsx";
 import ClientOnly from "@/legacy/ClientOnly.jsx";
+import { CalcSummary } from "@/app/_seo/summaries";
+
+// 서버 HTML 본문(검색엔진·광고 심사용 요약)을 하루마다 새 자료로 다시 만든다.
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "예상 배점 계산기 | 입대타이밍",
@@ -10,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <ClientOnly>
+    <ClientOnly fallback={<CalcSummary />}>
       <Calc />
     </ClientOnly>
   );

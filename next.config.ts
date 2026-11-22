@@ -9,12 +9,14 @@ const nextConfig: NextConfig = {
       "./server/data/{calendar,final_rates,links,lottery,rules,service_terms,forecast,exam_schedule,eligible_items}.json",
       "./server/data/snapshots.jsonl",
     ],
-    // 특기 상세 페이지는 서버에서 제목·설명(generateMetadata)을 만들 때 같은 자료를 읽는다.
-    "/mos/[code]": [
-      "./server/data/prepared/**",
-      "./server/data/{calendar,final_rates,links,lottery,rules,service_terms,forecast,exam_schedule,eligible_items}.json",
-      "./server/data/snapshots.jsonl",
-    ],
+    // 특기 상세와 주요 화면은 서버에서 제목·본문 요약을 만들 때 같은 자료를 읽는다(한 시간·하루마다 다시 만듦).
+    ...Object.fromEntries(
+      ["/mos/[code]", "/", "/now", "/find", "/calc", "/calendar", "/mos"].map((route) => [route, [
+        "./server/data/prepared/**",
+        "./server/data/{calendar,final_rates,links,lottery,rules,service_terms,forecast,exam_schedule,eligible_items}.json",
+        "./server/data/snapshots.jsonl",
+      ]]),
+    ),
   },
   outputFileTracingExcludes: {
     "*": [

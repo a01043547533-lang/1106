@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Find from "@/legacy/pages/Find.jsx";
 import ClientOnly from "@/legacy/ClientOnly.jsx";
+import { FindSummary } from "@/app/_seo/summaries";
+
+// 서버 HTML 본문(검색엔진·광고 심사용 요약)을 하루마다 새 자료로 다시 만든다.
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "내 조건으로 갈 수 있는 군 특기 찾기 | 입대타이밍",
@@ -10,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <ClientOnly>
+    <ClientOnly fallback={<FindSummary />}>
       <Find />
     </ClientOnly>
   );
