@@ -9,6 +9,7 @@ import { refreshExams } from './exam-api.js';
 import { waitUntil } from '@vercel/functions';
 import { runtime } from './repo/prepared.js';
 import { requestLimit } from './rate-limit.js';
+import { freshSnapshotTime, snapshotRows } from './snapshot-export.js';
 
 
 export const app = express();
@@ -54,6 +55,22 @@ const selectedItems = (query) => query.item === undefined ? list(query.items)
 // ── 과제 필수 6개 ─────────────────────────────
 
 app.get('/api/now', (req, res) => send(res, q.nowList(req.query)));
+
+// GitHub 수집기용: Vercel이 보유한 키로 조회한 공개 접수현황만 반환한다.
+// 저장본·실패한 갱신·오래된 자료는 절대로 최신 스냅샷으로 내보내지 않는다.
+app.get('/api/collection-snapshot', async (req, res, next) => {
+  try {
+    await refreshStatus();
+    const last = runtime.logs.findLast((r) => r.api === 'status');
+    if (!last?.ok || !Array.isArray(runtime.snapshots) ||
+        last.rows !== runtime.snapshots.length || !freshSnapshotTime(last.at) ||
+        runtime.snapshots.some((s) => s.source !== 'api' || s.collectedAt !== last.at)) {
+      return res.status(503).json({ error: 'fresh_snapshot_unavailable' });
+    }
+    const items = snapshotRows(runtime.snapshots);
+    res.json({ source: 'api', collectedAt: last.at, count: items.length, items });
+  } catch (error) { next(error); }
+});
 
 app.get('/api/rounds', (req, res) => {
   const map = new Map();
