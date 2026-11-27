@@ -25,6 +25,7 @@ const { clientIp, requestLimit } = await import('../server/rate-limit.js');
 const { describeFailure } = await import('../server/live.js');
 const { normalizeExamRows } = await import('../server/exam-api.js');
 const q = await import('../server/queries.js');
+const { validateSnapshotExport } = await import('../server/snapshot-export.js');
 
 test('특기: 같은 코드를 여러 군이 쓰면 섞지 않고, 응답은 Vercel 한도(4.5MB)보다 훨씬 작다', () => {
   const amb = q.mosDetail('46');
@@ -89,6 +90,18 @@ test('Vercel: 읽기 전용 파일시스템, 비공개 키, 실제 API 경로', 
       assert(Array.isArray(body.upcoming));
       assert(!JSON.stringify(body).includes(process.env.MMA_API_KEY));
     }
+    assert.equal(upstream, 1);
+    const exportResponse = await fetch(base + '/api/collection-snapshot');
+    assert.equal(exportResponse.status, 200);
+    const exported = await exportResponse.json();
+    assert.equal(validateSnapshotExport(exported)[0].m, '161.103');
+    assert.equal(exported.items[0].q, 10);
+    assert.equal(exported.items[0].a, 3);
+    assert(!JSON.stringify(exported).includes(process.env.MMA_API_KEY));
+    assert.throws(() => validateSnapshotExport({ ...exported, source: 'sample' }));
+    assert.throws(() => validateSnapshotExport({ ...exported, count: 0 }));
+    assert.throws(() => validateSnapshotExport(exported, Date.parse(exported.collectedAt) + 121000));
+    assert.throws(() => validateSnapshotExport({ ...exported, items: [{ ...exported.items[0], q: -1 }] }));
     assert.equal(upstream, 1);
     for (const route of ['/api/mos', '/api/service-terms', '/api/score-rules?mosCode=161.103', '/api/health', '/api/public-config']) {
       const response = await fetch(base + route); assert.equal(response.status, 200, route);

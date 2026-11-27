@@ -8,14 +8,31 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const { refreshStatus } = await import(path.join(ROOT, 'server/live.js').replace(/\\/g, '/').replace(/^([A-Za-z]):/, 'file:///$1:'));
 const { runtime } = await import(path.join(ROOT, 'server/repo/prepared.js').replace(/\\/g, '/').replace(/^([A-Za-z]):/, 'file:///$1:'));
-const { scheduleTime } = await import(path.join(ROOT, 'server/time.js').replace(/\\/g, '/').replace(/^([A-Za-z]):/, 'file:///$1:'));
+import { snapshotRows, validateSnapshotExport } from '../server/snapshot-export.js';
 
 await refreshStatus();
-if (!runtime.snapshots) { console.error('[collect] 병무청 조회 실패(키 없음 또는 응답 오류). 아무것도 저장하지 않았어요.'); process.exit(2); }
-const now = Date.now();
-const rows = runtime.snapshots
-  .filter((s) => s.applyEnd && scheduleTime(s.applyEnd, true) >= now - 86400000) // 마감 하루 지난 것까지(마감 직후 최종값 확보)
-  .map((s) => ({ t: s.collectedAt, b: s.branch, r: s.roundLabel, c: s.category, m: s.mosCode, n: s.mosName, u: s.unit, e: s.enlistMonth, as: s.applyStart, ae: s.applyEnd, q: s.quota, a: s.applicants }));
+let rows;
+if (runtime.snapshots) {
+  rows = snapshotRows(runtime.snapshots);
+} else if (runtime.logs.findLast((r) => r.api === 'status')?.error === 'missing_key') {
+  // GitHub에 키가 없으면 이미 운영 중인 Vercel 서버의 공개 데이터만 받는다.
+  // 키를 복사하거나 노출하지 않으며, 원본 수집과 같은 항목·원래 시각을 유지한다.
+  try {
+    const response = await fetch('https://www.ipdae.net/api/collection-snapshot', {
+      signal: AbortSignal.timeout(40000), redirect: 'error', cache: 'no-store',
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) throw new Error('snapshot_export_http_' + response.status);
+    rows = validateSnapshotExport(await response.json());
+    console.log('[collect] Vercel의 실시간 접수현황 사용');
+  } catch {
+    console.error('[collect] Vercel에서 검증된 최신 자료를 받지 못했어요. 아무것도 저장하지 않았어요.');
+    process.exit(2);
+  }
+} else {
+  console.error('[collect] 병무청 조회 실패. 아무것도 저장하지 않았어요.');
+  process.exit(2);
+}
 const dir = path.join(ROOT, 'server/data/history');
 fs.mkdirSync(dir, { recursive: true });
 const file = path.join(dir, `${new Date().toISOString().slice(0, 7)}.jsonl`);
