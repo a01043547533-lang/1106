@@ -3,7 +3,7 @@ import { cache } from "react";
 import { MosDetail as MosDetail } from "@/legacy/pages/Mos.jsx";
 import ClientOnly from "@/legacy/ClientOnly.jsx";
 import { describeMos } from "@/legacy/lib/describe.js";
-import { mosDetail } from "../../../../server/queries.js";
+import { meta, mosDetail } from "../../../../server/queries.js";
 
 // 특기 상세 화면은 브라우저에서 그리지만, 제목·설명·canonical과 본문 요약은 서버에서 특기별로 만든다.
 // 서버 HTML에 본문이 없으면 검색엔진이 수백 개 특기 페이지를 "같은 페이지(중복)"로 본다.
@@ -141,11 +141,22 @@ function Summary({ d }: { d: Detail }) {
   );
 }
 
+// 브라우저 화면(MosDetail)이 부르는 주소와 똑같이 만든다. 같아야 미리 넘긴 응답을 쓴다.
+const apiUrl = (code: string, branch: string | null) =>
+  `/api/mos/${encodeURIComponent(code)}${branch ? `?branch=${encodeURIComponent(branch)}` : ""}`;
+
 export default async function Page(props: Props) {
-  const d = await resolve(props);
+  const { code: raw } = await props.params;
+  const code = decodeURIComponent(raw);
+  const branch = pickBranch((await props.searchParams).branch);
+  const d = load(code, branch);
+  // 서버에서 계산한 API 응답을 그대로 넘겨, 브라우저가 붙은 뒤에도 '불러오는 중' 없이 같은 내용을 바로 그린다.
+  // API가 처음 깨어날 때 10초 넘게 걸리면 구글 렌더러에는 모든 특기 페이지가 같은 '불러오는 중' 화면으로 보여
+  // 서로 중복으로 처리됐다(서치 콘솔: 중복 페이지, Google에서 사용자와 다른 표준을 선택함).
+  const initial = d ? { url: apiUrl(code, branch), data: JSON.parse(JSON.stringify({ ...meta(), ...d })) } : undefined;
   return (
     <ClientOnly fallback={d ? <Summary d={d} /> : null}>
-      <MosDetail />
+      <MosDetail initial={initial} />
     </ClientOnly>
   );
 }

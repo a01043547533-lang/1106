@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
-import { LIVE_EVENT, getJson, peekJson } from './fetch-cache.js';
+import { LIVE_EVENT, getJson, peekJson, primeJson } from './fetch-cache.js';
 
 const initial = (url) => {
   const data = peekJson(url);
   return { url, data: data ?? null, error: null, loading: Boolean(url) && data === undefined, at: data === undefined ? null : new Date() };
 };
 
-export function useApi(url, { interval = 0 } = {}) {
+// initial: 서버가 같은 주소의 응답을 미리 계산해 넘긴 값 { url, data }. 주소가 같을 때만 쓴다.
+// 캐시를 먼저 채워 두면 첫 화면부터 '불러오는 중' 없이 내용이 나오고, 같은 주소를 다시 부르지 않는다.
+export function useApi(url, { interval = 0, initial: seed } = {}) {
+  if (seed && seed.url === url && seed.data != null) primeJson(url, seed.data);
   const [state, setState] = useState(() => initial(url));
   useEffect(() => {
     let alive = true;

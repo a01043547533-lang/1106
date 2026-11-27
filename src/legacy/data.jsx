@@ -3,7 +3,7 @@ import { createContext, useContext } from 'react';
 import { useApi } from './lib/use-api.js';
 export const DataContext = createContext({ path: null, data: {}, meta: {} });
 export function useMeta() { return useContext(DataContext).meta || {}; }
-export function useRouteData(key, url, pick = (r) => r) {
-  const state = useApi(url);
+export function useRouteData(key, url, pick = (r) => r, options = undefined) {
+  const state = useApi(url, options);
   return { ...state, value: state.data == null ? undefined : pick(state.data) };
 }

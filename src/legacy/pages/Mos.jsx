@@ -12,8 +12,10 @@ import { enlistLabel, sourceLabel, sumJobfit } from './Jobfit.jsx';
 import { AddToCalendar, Forecast, OfficialApplyGuide, RateBar, Status, addMonths, fmtRate, monthLabel, n, mosHref, calcHref, compareKey, BranchBadge } from '../components.jsx';
 import { CertificateSection, ExamTimeline } from '../exam-timeline.jsx';
 
-export function MosIndex() {
-  const idx = useRouteData('mosIndex', '/api/mos', (r) => r.items);
+// initial: 서버가 미리 만든 /api/mos 응답. 있으면 목록을 기다리지 않고 바로 그린다.
+/** @param {{ initial?: { url: string, data: any } }} [props] */
+export function MosIndex({ initial } = {}) {
+  const idx = useRouteData('mosIndex', '/api/mos', (r) => r.items, { initial });
   const navigate = useNavigate();
   const groups = {};
   for (const m of idx.value || []) (groups[m.branch || '기타'] ||= []).push(m);
@@ -73,12 +75,14 @@ function RateChart({ rates }) {
   );
 }
 
-export function MosDetail() {
+// initial: 서버가 미리 계산한 /api/mos/… 응답. 있으면 '불러오는 중' 없이 바로 그린다(검색엔진 렌더러도 같은 내용을 봄).
+/** @param {{ initial?: { url: string, data: any } }} [props] */
+export function MosDetail({ initial } = {}) {
   const { code } = useParams();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const branchParam = params.get('branch') || '';
-  const st = useRouteData('mos', `/api/mos/${encodeURIComponent(code)}${branchParam ? `?branch=${encodeURIComponent(branchParam)}` : ''}`);
+  const st = useRouteData('mos', `/api/mos/${encodeURIComponent(code)}${branchParam ? `?branch=${encodeURIComponent(branchParam)}` : ''}`, undefined, { initial });
   const d = st.value;
   // 군이 하나뿐인 코드인데 주소에 군이 붙어 있으면 대표 주소로 바꾼다(같은 페이지가 여러 주소로 잡히지 않게)
   useEffect(() => { if (d && d.mosCode === code && !st.loading && !d.ambiguous && branchParam && (d.branches || []).length <= 1) navigate(`/mos/${encodeURIComponent(code)}`, { replace: true }); }, [d, st.loading, branchParam, code, navigate]);

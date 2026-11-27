@@ -12,6 +12,15 @@ export function peekJson(url) {
   return hit && !hit.pending && 'data' in hit && Date.now() - hit.at < maxAgeOf(url) ? hit.data : undefined;
 }
 
+// 서버가 이미 계산해 보낸 응답을 캐시에 넣어 둔다. 화면이 같은 주소를 다시 부르지 않고 바로 그린다.
+// 아직 쓸 만한 값이 있으면 건드리지 않는다(렌더마다 불려도 한 번만 들어감).
+export function primeJson(url, data) {
+  if (!url || data == null || peekJson(url) !== undefined) return;
+  store.delete(url);
+  store.set(url, { at: Date.now(), pending: false, data, promise: Promise.resolve(data) });
+  if (store.size > MAX_ENTRIES) store.delete(store.keys().next().value);
+}
+
 export function getJson(url, { force = false } = {}) {
   const now = Date.now();
   const hit = store.get(url);
